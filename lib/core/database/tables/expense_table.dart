@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 class ExpenseTable {
-  static final String _tableName = 'expenses';
+  static final String tableName = 'expenses';
   static final List<String> _columns = [
     'id INTEGER PRIMARY KEY AUTOINCREMENT',
     'amount REAL NOT NULL',
@@ -12,7 +12,7 @@ class ExpenseTable {
   ];
 
   static Future<void> createTable(Database database) {
-    String sql = 'CREATE TABLE IF NOT EXISTS $_tableName (';
+    String sql = 'CREATE TABLE IF NOT EXISTS $tableName (';
     for(int i = 0; i < _columns.length; i++) {
       sql += _columns[i];
       if (i < _columns.length - 1) {
