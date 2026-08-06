@@ -1,22 +1,9 @@
 import 'package:flutter/material.dart';
+import 'core/database/database_service.dart';
 
-void main(){
-  runApp( const MaterialApp(
-    home: HomePage()
-  ));
-}
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class HomePage extends StatelessWidget{
-  const HomePage({super.key});
+  await DatabaseService.instance.initialize();
 
-  @override
-  Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Budget Manager"), elevation: 12,
-        actions: [Icon(Icon.add)],
-        ),
-      body: const Center(child: Text("Test"),),
-    );
-  }
 }

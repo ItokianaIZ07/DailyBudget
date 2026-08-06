@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 class LimitTable {
-    static final String _tableName = 'limit';
+    static final String _tableName = 'category_limit';
     static final List<String> _columns = [
       'id INTEGER PRIMARY KEY AUTOINCREMENT',
       'amount REAL NOT NULL',
