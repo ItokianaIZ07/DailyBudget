@@ -1,0 +1,3 @@
+class DatabaseMigration {
+  void upgrade(){}
+}
