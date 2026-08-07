@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/repositories/category_repository.dart';
+import 'package:gestion_depenses/features/settings/pages/category_form_page.dart';
 
 class CategoriesPage extends StatefulWidget {
+  const CategoriesPage({super.key});
   @override
   State<CategoriesPage> createState() => _CategoriesPageState();
 }
@@ -18,14 +20,16 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Future<void> _loadCategories() async {
-    try{
+    try {
       List<Category> categories = await CategoryRepository.getAllCategories();
       setState(() {
         _categories = categories;
         _isLoading = false;
       });
-    }catch(e){
-      print("Une erreur est survenue lors de la récupération des données de catégories ${e}");
+    } catch (e) {
+      print(
+        "Une erreur est survenue lors de la récupération des données de catégories ${e}",
+      );
     }
   }
 
@@ -63,6 +67,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
     return Scaffold(
       appBar: AppBar(title: Text('Categories')),
       body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder:(context){
+             return CategoryFormPage();
+            }));
+        },
+        backgroundColor: Color.fromRGBO(20, 89, 159, 1),
+        foregroundColor: Color.fromRGBO(255, 255, 255, 1),
+        child: Icon(Icons.add),
+      ),
     );
   }
 }

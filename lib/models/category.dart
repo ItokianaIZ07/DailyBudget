@@ -1,5 +1,5 @@
 class Category {
-  final int? id;
+  int? id;
   final String name;
   String? color = "#FFFFFF";
 
