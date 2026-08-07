@@ -62,19 +62,24 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
+  Future<void> _openCategoryFormPage() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CategoryFormPage()),
+    );
+
+    if (result == true) {
+      _loadCategories();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Categories')),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder:(context){
-             return CategoryFormPage();
-            }));
-        },
+        onPressed: _openCategoryFormPage,
         backgroundColor: Color.fromRGBO(20, 89, 159, 1),
         foregroundColor: Color.fromRGBO(255, 255, 255, 1),
         child: Icon(Icons.add),

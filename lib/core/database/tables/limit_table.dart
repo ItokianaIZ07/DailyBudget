@@ -5,7 +5,7 @@ class LimitTable {
   static final List<String> _columns = [
     'id INTEGER PRIMARY KEY AUTOINCREMENT',
     'amount REAL NOT NULL',
-    'category_id INTEGER NOT NULL',
+    'category_id INTEGER NOT NULL UNIQUE',
     'FOREIGN KEY(category_id) REFERENCES category(id)'
   ];
 
