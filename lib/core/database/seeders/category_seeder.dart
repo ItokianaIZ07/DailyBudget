@@ -38,8 +38,5 @@ class CategorySeeder {
     List<Map<String, dynamic>> resultatsTest = await database.rawQuery(
       'SELECT COUNT(*) AS total FROM category',
     );
-
-    int countTest = resultats.first['total'] as int;
-    print(countTest);
   }
 }

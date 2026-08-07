@@ -5,6 +5,7 @@ import 'tables/expense_table.dart';
 import 'tables/limit_table.dart';
 import 'tables/appMetadata_table.dart';
 import 'seeders/category_seeder.dart';
+import 'seeders/limit_seeder.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._();
@@ -33,6 +34,7 @@ class DatabaseService {
       onCreate: (db, version) async {
         await _createTables(db);
         await CategorySeeder.initialize(db);
+        await LimitSeeder.initialize(db);
       },
       onUpgrade: (db, oldVersion, newVersion) => {
 
