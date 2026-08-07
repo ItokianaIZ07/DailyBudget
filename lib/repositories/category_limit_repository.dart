@@ -80,15 +80,14 @@ class CategoryLimitRepository {
     );
   }
 
-  static Future<List<CategoryLimit>> getLimitsByCategory(Category category) async {
+  static Future<CategoryLimit?> getLimitByCategory(Category category) async {
     final List<Map<String, dynamic>> results = await _database.query(
       _tableName,
       where: 'category_id = ?',
       whereArgs: [category.id],
+      limit: 1
     );
 
-    return results
-        .map((map) => CategoryLimit.fromMap(map, category))
-        .toList();
+    return results.isNotEmpty ? CategoryLimit.fromMap(results.first, category) : null;
   }
 }

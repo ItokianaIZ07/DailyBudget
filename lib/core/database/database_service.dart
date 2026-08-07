@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 import 'database_constants.dart';
 import 'tables/category_table.dart';
 import 'tables/expense_table.dart';
@@ -27,14 +28,13 @@ class DatabaseService {
       return connexion!;
     }
     String databasePath = await getDatabasesPath();
-    String path = '$databasePath/${DatabaseConstants.databaseName}';
+    String path = join(databasePath,DatabaseConstants.databaseName,);
     connexion = await openDatabase(
       path, 
       version: DatabaseConstants.version,
       onCreate: (db, version) async {
         await _createTables(db);
-        await CategorySeeder.initialize(db);
-        await LimitSeeder.initialize(db);
+        await _insertDefaultData(db);
       },
       onUpgrade: (db, oldVersion, newVersion) => {
 
@@ -48,5 +48,10 @@ class DatabaseService {
     await ExpenseTable.createTable(database);
     await LimitTable.createTable(database);
     await AppmetadataTable.createTable(database);
+  }
+
+  Future<void> _insertDefaultData(Database database) async {
+    await CategorySeeder.initialize(database);
+    await LimitSeeder.initialize(database);
   }
 }

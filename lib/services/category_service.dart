@@ -3,6 +3,8 @@ import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/category_limit.dart';
 import 'package:gestion_depenses/repositories/category_repository.dart';
 import 'package:gestion_depenses/repositories/category_limit_repository.dart';
+import 'package:gestion_depenses/models/category_with_limit.dart';
+import 'package:gestion_depenses/repositories/category_repository.dart';
 
 class CategoryService {
   static Future<OperationResult> insert(
@@ -74,5 +76,9 @@ class CategoryService {
       return false;
     }
     return amount.isNotEmpty;
+  }
+
+  static Future<List<CategoryWithLimit>> getCategoriesWithLimit() async{
+    return await CategoryRepository.getCategoriesWithLimit();
   }
 }

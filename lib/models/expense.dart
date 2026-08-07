@@ -20,7 +20,7 @@ class Expense {
       'id': id,
       'description': description,
       'amount': amount,
-      'category': category.id,
+      'category_id': category.id,
       'date': date.toIso8601String()
     };
   }

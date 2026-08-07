@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gestion_depenses/models/category.dart';
-import 'package:gestion_depenses/repositories/category_repository.dart';
+import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/features/settings/pages/category_form_page.dart';
+import 'package:gestion_depenses/services/category_service.dart';
+import 'package:intl/intl.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -10,8 +11,10 @@ class CategoriesPage extends StatefulWidget {
 }
 
 class _CategoriesPageState extends State<CategoriesPage> {
-  List<Category> _categories = [];
+  List<CategoryWithLimit> _categories = [];
   bool _isLoading = true;
+  final formatAr = NumberFormat.currency(locale: 'fr_FR', symbol: 'Ar');
+
 
   @override
   void initState() {
@@ -21,14 +24,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
   Future<void> _loadCategories() async {
     try {
-      List<Category> categories = await CategoryRepository.getAllCategories();
+      List<CategoryWithLimit> categories = await CategoryService.getCategoriesWithLimit();
       setState(() {
         _categories = categories;
         _isLoading = false;
       });
     } catch (e) {
       print(
-        "Une erreur est survenue lors de la récupération des données de catégories ${e}",
+        "Une erreur est survenue lors de la récupération des données de catégories $e",
       );
     }
   }
@@ -57,17 +60,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
         final category = _categories[index];
 
         return ListTile(
-          title: Text(category.name),
+          title: Text(category.toMap()['name']),
           trailing: Container(
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: _parseColor(category.color!),
-              shape: BoxShape
-                  .circle, 
+              color: _parseColor(category.toMap()['color']),
+              shape: BoxShape.circle, 
               border: Border.all(color: Colors.grey.shade300),
             ),
           ),
+          subtitle: Text("Limite mensuel ${formatAr.format(category.toMap()["limit"])}"),
         );
       },
     );
@@ -77,7 +80,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
   Color _parseColor(String hexColor) {
     String hex = hexColor.replaceAll('#', '');
 
-    // Si le code est sous format 6 caractères (#RRGGBB), on ajoute l'opacité 100% (FF)
     if (hex.length == 6) {
       hex = 'FF$hex';
     }
