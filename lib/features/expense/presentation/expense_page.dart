@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/features/expense/widgets/expense_widgets.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/services/category_service.dart';
@@ -223,24 +224,12 @@ class _ExpensePageState extends State<ExpensePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Nouvelle dépense',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.colors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Enregistrez votre dépense et associez-la à une catégorie',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppTheme.colors.textMuted,
-                      ),
+                    const ExpenseHeader(
+                      title: 'Nouvelle dépense',
+                      subtitle: 'Enregistrez votre dépense et associez-la à une catégorie',
                     ),
                     const SizedBox(height: 24),
-                    _buildInputCard(
+                    ExpenseInputCard(
                       label: 'Montant',
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -248,10 +237,9 @@ class _ExpensePageState extends State<ExpensePage> {
                           Expanded(
                             child: TextField(
                               controller: _amountController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
                               decoration: const InputDecoration(
                                 hintText: '0',
                                 border: InputBorder.none,
@@ -276,7 +264,7 @@ class _ExpensePageState extends State<ExpensePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildInputCard(
+                    ExpenseInputCard(
                       label: 'Description',
                       child: TextField(
                         controller: _descriptionController,
@@ -291,35 +279,19 @@ class _ExpensePageState extends State<ExpensePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildCategoryCard(),
+                    ExpenseCategoryCard(
+                      selectedCategory: _selectedCategory,
+                      onTap: _selectCategory,
+                    ),
                     const SizedBox(height: 16),
-                    _buildDateCard(),
-                    const SizedBox(height: 32), // Remplace le Spacer()
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.colors.primary,
-                          foregroundColor: AppTheme.colors.surface,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius.sm,
-                            ),
-                          ),
-                        ),
-                        onPressed: _isSaving ? null : _saveExpense,
-                        child: _isSaving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Enregistrer la dépense'),
-                      ),
+                    ExpenseDateCard(
+                      selectedDate: _selectedDate,
+                      onTap: _selectDate,
+                    ),
+                    const SizedBox(height: 32),
+                    ExpenseActionButton(
+                      isSaving: _isSaving,
+                      onPressed: _saveExpense,
                     ),
                   ],
                 ),
@@ -328,136 +300,4 @@ class _ExpensePageState extends State<ExpensePage> {
     );
   }
 
-  Widget _buildInputCard({required String label, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.colors.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-        border: Border.all(color: AppTheme.colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: AppTheme.colors.textMuted,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryCard() {
-    return GestureDetector(
-      onTap: _selectCategory,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.colors.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-          border: Border.all(color: AppTheme.colors.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Catégorie',
-                    style: TextStyle(
-                      color: AppTheme.colors.textMuted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_selectedCategory == null)
-                    Text(
-                      'Choisir une catégorie',
-                      style: TextStyle(color: AppTheme.colors.text),
-                    )
-                  else
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: _parseColor(
-                            _selectedCategory!.category.color ?? '#FFFFFF',
-                          ),
-                          radius: 16,
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _selectedCategory!.category.name,
-                              style: TextStyle(
-                                color: AppTheme.colors.text,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Limite ${_selectedCategory!.categoryLimit.amount.toStringAsFixed(0)} Ar',
-                              style: TextStyle(
-                                color: AppTheme.colors.textMuted,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-            Icon(Icons.keyboard_arrow_down, color: AppTheme.colors.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateCard() {
-    return GestureDetector(
-      onTap: _selectDate,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.colors.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-          border: Border.all(color: AppTheme.colors.border),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Date',
-                  style: TextStyle(
-                    color: AppTheme.colors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                  style: TextStyle(color: AppTheme.colors.text, fontSize: 16),
-                ),
-              ],
-            ),
-            Icon(Icons.calendar_today, color: AppTheme.colors.primary),
-          ],
-        ),
-      ),
-    );
-  }
 }
