@@ -13,7 +13,9 @@ class CategoryFormPage extends StatefulWidget {
 class _CategoryFormPageState extends State<CategoryFormPage> {
   late TextEditingController _nameEditingController;
   late TextEditingController _amountEditingController;
-  Color _currentColor = Colors.blue;
+  late Color _currentColor;
+
+  void changeColor(Color color) => setState(() => _currentColor = color);
 
   @override
   void initState() {
@@ -32,7 +34,22 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
           children: [
             Text("Nom de la catégorie"),
             TextField(controller: _nameEditingController),
-            Text("Couleur"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Choisir une couleur"),
+                Container(
+                  width: 32.0, 
+                  height: 32.0, 
+                  decoration: BoxDecoration(
+                    color: _currentColor, 
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: [BoxShadow(color: const Color.fromARGB(90, 36, 36, 36), offset: Offset(2, 2))]
+                  ),
+                ),
+              ],
+            ),
             ElevatedButton(
               onPressed: () {
                 _showColorPicker(context);
@@ -46,7 +63,8 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                String colorString = '#${_currentColor.toARGB32().toRadixString(16).padLeft(8, '0')}';
+                String colorString =
+                    '#${_currentColor.toARGB32().toRadixString(16).padLeft(8, '0')}';
                 OperationResult result = await CategoryService.insert(
                   _nameEditingController.text,
                   colorString,
@@ -125,8 +143,6 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
       },
     );
   }
-
-  void changeColor(Color color) => setState(() => _currentColor = color);
 
   void _showColorPicker(BuildContext context) {
     showDialog(

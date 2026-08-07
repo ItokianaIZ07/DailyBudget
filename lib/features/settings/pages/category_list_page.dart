@@ -50,16 +50,39 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Widget _buildCategoryList() {
-    return ListView.builder(
+    return ListView.separated(
       itemCount: _categories.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final category = _categories[index];
+
         return ListTile(
           title: Text(category.name),
-          subtitle: Text('Color: ${category.color}'),
+          trailing: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: _parseColor(category.color!),
+              shape: BoxShape
+                  .circle, 
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+          ),
         );
       },
     );
+  }
+
+  // Fonction utilitaire pour convertir une chaîne Hex (#XXXXXX ou #XXXXXXXX) en Color Flutter
+  Color _parseColor(String hexColor) {
+    String hex = hexColor.replaceAll('#', '');
+
+    // Si le code est sous format 6 caractères (#RRGGBB), on ajoute l'opacité 100% (FF)
+    if (hex.length == 6) {
+      hex = 'FF$hex';
+    }
+
+    return Color(int.parse(hex, radix: 16));
   }
 
   Future<void> _openCategoryFormPage() async {
