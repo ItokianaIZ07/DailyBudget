@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/features/settings/pages/category_form_page.dart';
 import 'package:gestion_depenses/services/category_service.dart';
@@ -13,7 +14,7 @@ class CategoriesPage extends StatefulWidget {
 class _CategoriesPageState extends State<CategoriesPage> {
   List<CategoryWithLimit> _categories = [];
   bool _isLoading = true;
-  final formatAr = NumberFormat.currency(locale: 'fr_FR', symbol: 'Ar');
+  final formatAr = CurrencyUtil.getFormater();
 
 
   @override

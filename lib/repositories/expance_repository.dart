@@ -20,14 +20,12 @@ class ExpenseRepository {
 
 
   static Future<List<Expense>> getAllExpenses() async {
-    final List<Map<String, dynamic>> results =
-        await _database.query(_tableName);
+    final List<Map<String, dynamic>> results = await _database.query(_tableName, orderBy: "date DESC");
 
     List<Expense> expenses = [];
 
     for (var map in results) {
-      Category? category =
-          await CategoryRepository.getCategoryById(map['category_id']);
+      Category? category = await CategoryRepository.getCategoryById(map['category_id']);
 
       if (category != null) {
         expenses.add(

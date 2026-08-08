@@ -27,6 +27,7 @@ class Expense {
 
   factory Expense.fromMap(Map<String, dynamic> map, {required Category category}){
     return Expense(
+      id: map['id'],
       amount: map['amount'],
       description: map['description'],
       category: category,
