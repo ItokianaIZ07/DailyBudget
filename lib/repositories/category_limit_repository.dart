@@ -59,8 +59,8 @@ class CategoryLimitRepository {
     return _database.update(
       _tableName,
       categoryLimit.toMap(),
-      where: 'id = ?',
-      whereArgs: [categoryLimit.id],
+      where: 'category_id = ?',
+      whereArgs: [categoryLimit.category.id],
     );
   }
 
