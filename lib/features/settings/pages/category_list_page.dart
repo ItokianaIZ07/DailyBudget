@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/features/settings/widgets/category_card.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/features/settings/pages/category_form_page.dart';
+import 'package:gestion_depenses/core/utils/color_utils.dart';
+import 'package:gestion_depenses/models/option_result.dart';
 import 'package:gestion_depenses/services/category_service.dart';
-import 'package:intl/intl.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -16,22 +18,53 @@ class _CategoriesPageState extends State<CategoriesPage> {
   bool _isLoading = true;
   final formatAr = CurrencyUtil.getFormater();
 
-
   @override
   void initState() {
     super.initState();
     _loadCategories();
   }
 
+  Future<OperationResult> _saveCategory({
+    required String name,
+    required String color,
+    required String amount,
+    int? categoryId,
+    int? limitId,
+  }) async {
+    return await CategoryService.insert(name, color, amount);
+  }
+
+  Future<OperationResult> _updateCategory({
+    required String name,
+    required String color,
+    required String amount,
+    int? categoryId,
+    int? limitId,
+  }) async {
+    return await CategoryService.updateCategory(
+      name,
+      color,
+      amount,
+      categoryId!,
+      limitId!,
+    );
+  }
+
+  Future<void> _deleteCategory({required CategoryWithLimit category}) async {
+    await CategoryService.deleteCategory(category);
+    _loadCategories();
+  }
+
   Future<void> _loadCategories() async {
     try {
-      List<CategoryWithLimit> categories = await CategoryService.getCategoriesWithLimit();
+      List<CategoryWithLimit> categories =
+          await CategoryService.getCategoriesWithLimit();
       setState(() {
         _categories = categories;
         _isLoading = false;
       });
     } catch (e) {
-      print(
+      debugPrint(
         "Une erreur est survenue lors de la récupération des données de catégories $e",
       );
     }
@@ -60,38 +93,35 @@ class _CategoriesPageState extends State<CategoriesPage> {
       itemBuilder: (context, index) {
         final category = _categories[index];
 
-        return ListTile(
-          title: Text(category.toMap()['name']),
-          trailing: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: _parseColor(category.toMap()['color']),
-              shape: BoxShape.circle, 
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-          ),
-          subtitle: Text("Limite mensuel ${formatAr.format(category.toMap()["limit"])}"),
+        return CategoryCard(
+          category: category,
+          onEdit: (){
+            _openCategoryFormPage(
+              title: "Modifier la catégorie",
+              category: category
+            );
+          },
+          onDelete: () {
+            _deleteCategory(category: category);
+          },
         );
       },
     );
   }
 
-  // Fonction utilitaire pour convertir une chaîne Hex (#XXXXXX ou #XXXXXXXX) en Color Flutter
-  Color _parseColor(String hexColor) {
-    String hex = hexColor.replaceAll('#', '');
-
-    if (hex.length == 6) {
-      hex = 'FF$hex';
-    }
-
-    return Color(int.parse(hex, radix: 16));
-  }
-
-  Future<void> _openCategoryFormPage() async {
+  Future<void> _openCategoryFormPage({
+    required String title,
+    CategoryWithLimit? category,
+  }) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CategoryFormPage()),
+      MaterialPageRoute(
+        builder: (context) => CategoryFormPage(
+          title: title,
+          category: category,
+          onSave: category == null ? _saveCategory : _updateCategory,
+        ),
+      ),
     );
 
     if (result == true) {
@@ -105,7 +135,9 @@ class _CategoriesPageState extends State<CategoriesPage> {
       appBar: AppBar(title: Text('Categories')),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
-        onPressed: _openCategoryFormPage,
+        onPressed: () {
+          _openCategoryFormPage(title: "Nouvelle catégorie");
+        },
         backgroundColor: Color.fromRGBO(20, 89, 159, 1),
         foregroundColor: Color.fromRGBO(255, 255, 255, 1),
         child: Icon(Icons.add),

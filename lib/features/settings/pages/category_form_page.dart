@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/option_result.dart';
 import 'package:gestion_depenses/services/category_service.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:gestion_depenses/core/utils/color_utils.dart';
 
 class CategoryFormPage extends StatefulWidget {
-  const CategoryFormPage({super.key});
+  final String title;
+  final CategoryWithLimit? category;
+  final Future<OperationResult> Function({
+    required String name,
+    required String color,
+    required String amount,
+    int? categoryId,
+    int? limitId
+  })
+  onSave;
+
+  const CategoryFormPage({
+    required this.title,
+    this.category,
+    required this.onSave,
+    super.key,
+  });
 
   @override
   State<CategoryFormPage> createState() => _CategoryFormPageState();
@@ -13,7 +31,7 @@ class CategoryFormPage extends StatefulWidget {
 class _CategoryFormPageState extends State<CategoryFormPage> {
   late TextEditingController _nameEditingController;
   late TextEditingController _amountEditingController;
-  late Color _currentColor;
+  Color _currentColor = Colors.blue;
 
   void changeColor(Color color) => setState(() => _currentColor = color);
 
@@ -22,12 +40,18 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
     super.initState();
     _nameEditingController = TextEditingController();
     _amountEditingController = TextEditingController();
+    if (widget.category != null) {
+      _currentColor = parseColor(widget.category!.category.color!);
+      _nameEditingController.text = widget.category!.category.name;
+      _amountEditingController.text = widget.category!.categoryLimit.amount
+          .toString();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Nouvelle catégorie")),
+      appBar: AppBar(title: Text(widget.title)),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -39,13 +63,18 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
               children: [
                 Text("Choisir une couleur"),
                 Container(
-                  width: 32.0, 
-                  height: 32.0, 
+                  width: 32.0,
+                  height: 32.0,
                   decoration: BoxDecoration(
-                    color: _currentColor, 
+                    color: _currentColor,
                     shape: BoxShape.rectangle,
                     borderRadius: BorderRadius.circular(4),
-                    boxShadow: [BoxShadow(color: const Color.fromARGB(90, 36, 36, 36), offset: Offset(2, 2))]
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color.fromARGB(90, 36, 36, 36),
+                        offset: Offset(2, 2),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -65,11 +94,19 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
               onPressed: () async {
                 String colorString =
                     '#${_currentColor.toARGB32().toRadixString(16).padLeft(8, '0')}';
-                OperationResult result = await CategoryService.insert(
-                  _nameEditingController.text,
-                  colorString,
-                  _amountEditingController.text,
-                );
+                OperationResult result = widget.category == null
+                    ? await widget.onSave(
+                        name: _nameEditingController.text,
+                        amount: _amountEditingController.text,
+                        color: colorString,
+                      )
+                    : await widget.onSave(
+                        name: _nameEditingController.text,
+                        amount: _amountEditingController.text,
+                        color: colorString,
+                        categoryId: widget.category!.category.id,
+                        limitId: widget.category!.categoryLimit.id
+                      );
                 if (!result.success) {
                   _showErrorDialog(context, result.message);
                   return;

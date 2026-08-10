@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/core/utils/color_utils.dart';
 import 'package:gestion_depenses/features/expense/widgets/expense_widgets.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';
@@ -79,7 +80,7 @@ class _ExpensePageState extends State<ExpensePage> {
             ..._categories.map((category) {
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: _parseColor(
+                  backgroundColor: parseColor(
                     category.category.color ?? '#FFFFFF',
                   ),
                   radius: 18,
@@ -200,13 +201,7 @@ class _ExpensePageState extends State<ExpensePage> {
     );
   }
 
-  Color _parseColor(String hexColor) {
-    String hex = hexColor.replaceAll('#', '');
-    if (hex.length == 6) {
-      hex = 'FF$hex';
-    }
-    return Color(int.parse(hex, radix: 16));
-  }
+  
 
   @override
   Widget build(BuildContext context) {

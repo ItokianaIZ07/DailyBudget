@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/core/utils/color_utils.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 
 class ExpenseHeader extends StatelessWidget {
@@ -104,7 +105,7 @@ class ExpenseCategoryCard extends StatelessWidget {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: _parseColor(selectedCategory!.category.color ?? '#FFFFFF'),
+                          backgroundColor: parseColor(selectedCategory!.category.color ?? '#FFFFFF'),
                           radius: 16,
                         ),
                         const SizedBox(width: 12),
@@ -128,13 +129,7 @@ class ExpenseCategoryCard extends StatelessWidget {
     );
   }
 
-  Color _parseColor(String hexColor) {
-    String hex = hexColor.replaceAll('#', '');
-    if (hex.length == 6) {
-      hex = 'FF$hex';
-    }
-    return Color(int.parse(hex, radix: 16));
-  }
+  
 }
 
 class ExpenseDateCard extends StatelessWidget {
