@@ -61,8 +61,6 @@ class CategoryRepository {
     "SELECT c.id, c.name, c.color, l.amount, l.id AS limit_id FROM category c LEFT JOIN category_limit l ON l.category_id = c.id";
     List<Map<String, dynamic>> resultats = await database.rawQuery(sql);
 
-    List<CategoryWithLimit> categories = [];
-
     return resultats.map((item) {
       Category category = Category(
         id: item['id'],

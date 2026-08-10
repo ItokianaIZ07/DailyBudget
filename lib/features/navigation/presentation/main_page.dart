@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_depenses/features/home/presentation/home_page.dart';
 import 'package:gestion_depenses/features/expense/presentation/expense_page.dart';
 import 'package:gestion_depenses/features/settings/pages/setting_page.dart';
+import 'package:gestion_depenses/features/statistics/pages/statistic_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -11,7 +12,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
-  final List<Widget> _pages = [HomePage(), ExpensePage(), SettingPage()];
+  final List<Widget> _pages = [HomePage(), ExpensePage(), StatisticPage(),SettingPage()];
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +36,10 @@ class _MainPageState extends State<MainPage> {
             icon: Icon(Icons.payments),
             label: "Dépenses",
           ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.bar_chart),
-          //   label: "Statistiques",
-          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: "Statistiques",
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: "Paramètres",

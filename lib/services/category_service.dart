@@ -121,4 +121,8 @@ class CategoryService {
       debugPrint("Une erreur est survenue lors de la suppression de ${category.name}");
     }
   }
+
+  static Future<List<Category>> getAllCategories() async{
+    return await CategoryRepository.getAllCategories();
+  }
 }

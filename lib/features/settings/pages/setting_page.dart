@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'category_list_page.dart';
 
 class SettingPage extends StatelessWidget {
+  const SettingPage({super.key});
 
   Widget _buildMenuList(){
     return ListView.builder(

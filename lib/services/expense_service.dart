@@ -1,3 +1,4 @@
+import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/option_result.dart';
@@ -74,4 +75,13 @@ class ExpenseService {
   static Future<int> deleteExpense(Expense expense) async{
     return await ExpenseRepository.deleteExpense(expense);
   }
+
+  static Future<List<Expense>> getByCategory(Category? category) async{
+    if(category == null){
+      return await getAllExpenses();
+    }
+    
+    return await ExpenseRepository.getExpensesByCategory(category);
+  }
+  
 }
