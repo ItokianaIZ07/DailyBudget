@@ -8,7 +8,13 @@ class SettingPage extends StatelessWidget {
       itemCount: 1,
       itemBuilder: (context, index) {
         return ListTile(
-          title: Text("Categories"),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Catégories"),
+              Icon(Icons.category_outlined),
+            ],
+          ),
           onTap: () {
             Navigator.push(
               context, 
