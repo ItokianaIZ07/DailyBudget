@@ -74,6 +74,23 @@ class _StatisticPageState extends State<StatisticPage> {
     }
   }
 
+  Future<void> _loadExpensesByKeyword(String keyword) async{
+    if(keyword.isEmpty){
+      await _loadExpenses();
+      return;
+    }
+    try{
+      final expenses = await ExpenseService.searchByKeyWord(keyword);
+      setState(() {
+        _expenses.clear();
+        _expenses.addAll(expenses);
+      });
+    }catch(e){
+      debugPrint("Une erreur est survenue lors de la recherche des dépenses $e");
+    }
+
+  }
+
   @override
   void initState() {
     super.initState();
@@ -105,12 +122,18 @@ class _StatisticPageState extends State<StatisticPage> {
                           _loadExpenses();
                         });
                       },
+                      onSearch: (keyword){
+                        setState(() {
+                          _selectedCategory = null;
+                          _loadExpensesByKeyword(keyword);
+                        });
+                      },
                     ),
                   ),
                   _expenses.isEmpty
                       ? Center(
                           child: Text(
-                            "Aucune dépense ne correspond à cette catégorie",
+                            "Aucune dépense trouvée pour cette catégorie",
                             style: TextStyle(
                               color: AppTheme.colors.textMuted,
                               fontStyle: FontStyle.italic,
@@ -123,6 +146,7 @@ class _StatisticPageState extends State<StatisticPage> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             initialItemCount: _expenses.length,
+                            padding: EdgeInsets.only(top: 0, bottom: 0, left: 8, right: 8),
                             itemBuilder:
                                 (
                                   BuildContext context,

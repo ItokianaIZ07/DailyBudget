@@ -7,10 +7,12 @@ import 'package:gestion_depenses/services/category_service.dart';
 class SortWidget extends StatefulWidget {
   Category? selectedCategory;
   final ValueChanged<Category?> onCategorySelected;
+  final Function(String)? onSearch;
 
   SortWidget({
     required this.selectedCategory,
     required this.onCategorySelected,
+    required this.onSearch,
     super.key,
   });
 
@@ -20,6 +22,7 @@ class SortWidget extends StatefulWidget {
 
 class _SortWidgetState extends State<SortWidget> {
   List<Category> _categories = [];
+  late final TextEditingController _editingController;
 
   Future<void> _loadCategories() async {
 
@@ -38,6 +41,7 @@ class _SortWidgetState extends State<SortWidget> {
   @override
   void initState() {
     super.initState();
+    _editingController = TextEditingController();
     _loadCategories();
   }
 
@@ -60,10 +64,16 @@ class _SortWidgetState extends State<SortWidget> {
             size: 21,
           ),
 
-          suffixIcon: IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.close, color: AppTheme.colors.textMuted, size: 19),
-          ),
+          suffixIcon: _editingController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  _editingController.clear();
+                  widget.onSearch?.call(''); 
+                  setState(() {}); 
+                },
+              )
+            : null,
 
           border: InputBorder.none,
 
@@ -72,6 +82,11 @@ class _SortWidgetState extends State<SortWidget> {
             vertical: 13,
           ),
         ),
+        controller: _editingController,
+        onChanged: (value) => {
+          widget.onSearch?.call(value)
+        },
+
       ),
     );
   }
@@ -166,5 +181,11 @@ class _SortWidgetState extends State<SortWidget> {
       spacing: 8,
       children: [_buildSearchField(), _buildCategoryFilter()],
     );
+  }
+
+  @override
+  void dispose(){
+    _editingController.dispose();
+    super.dispose();
   }
 }
