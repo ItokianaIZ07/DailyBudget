@@ -2,7 +2,7 @@ import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/option_result.dart';
-import 'package:gestion_depenses/repositories/expance_repository.dart';
+import 'package:gestion_depenses/repositories/expense_repository.dart';
 
 class ExpenseService {
   static OperationResult validateExpenseInput({
@@ -84,4 +84,7 @@ class ExpenseService {
     return await ExpenseRepository.getExpensesByCategory(category);
   }
   
+  static Future<List<Expense>> searchByKeyWord(String keyword) async{
+    return await ExpenseRepository.getByKeyword(keyword);
+  }
 }
