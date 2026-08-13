@@ -66,6 +66,7 @@ class _HomePageState extends State<HomePage> {
               description: removedExpense.description,
               amount: removedExpense.amount,
               category: removedExpense.category.name,
+              date: removedExpense.date,
               onDelete: () {},
             ),
           ),
@@ -172,6 +173,7 @@ class _HomePageState extends State<HomePage> {
                                   description: expense.description,
                                   amount: expense.amount,
                                   category: expense.category.name,
+                                  date: expense.date,
                                   onDelete: () async {
                                     await _deleteExpense(expense, index);
                                   },

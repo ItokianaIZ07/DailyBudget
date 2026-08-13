@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 
 class ExpenseCard extends StatelessWidget {
   final String description;
   final double amount;
   final String category;
+  final DateTime date;
   final VoidCallback onDelete;
 
   final _formatAr = CurrencyUtil.getFormater();
@@ -15,6 +17,7 @@ class ExpenseCard extends StatelessWidget {
     required this.amount,
     required this.category,
     required this.onDelete,
+    required this.date,
     super.key,
   });
 
@@ -79,7 +82,7 @@ class ExpenseCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    category,
+                    "$category.${DatetimeUtil.formatDate(date)}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

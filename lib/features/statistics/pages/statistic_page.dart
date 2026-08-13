@@ -62,6 +62,7 @@ class _StatisticPageState extends State<StatisticPage> {
               description: removedExpense.description,
               amount: removedExpense.amount,
               category: removedExpense.category.name,
+              date: removedExpense.date,
               onDelete: () {},
             ),
           ),
@@ -163,6 +164,7 @@ class _StatisticPageState extends State<StatisticPage> {
                                         description: expense.description,
                                         amount: expense.amount,
                                         category: expense.category.name,
+                                        date: expense.date,
                                         onDelete: () async {
                                           await _deleteExpense(expense, index);
                                         },

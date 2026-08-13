@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 class DatetimeUtil {
 
   static final DateTime now = DateTime.now();
+  static final DateFormat _formater = DateFormat.yMMMd("fr_FR");
 
   static int getNowDay(){
     return now.day;
@@ -32,5 +33,9 @@ class DatetimeUtil {
     String dateFormatee = DateFormat('EEEE d MMMM yyyy', 'fr_FR').format(maintenant);
     
     return dateFormatee;
+  }
+
+  static String formatDate(DateTime date){
+    return _formater.format(date);
   }
 }
