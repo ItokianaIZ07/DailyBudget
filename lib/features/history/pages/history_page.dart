@@ -158,7 +158,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         )
                       : Expanded(
                           child: AnimatedList(
-                            key: _expenseListKey,
+                            key: ValueKey("${widget.selectedYear}_${_selectedCategory?.id}_${_expenses.length}"),
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             initialItemCount: _expenses.length,
