@@ -25,7 +25,6 @@ class _SortWidgetState extends State<SortWidget> {
   late final TextEditingController _editingController;
 
   Future<void> _loadCategories() async {
-
     try {
       final categories = await CategoryService.getAllCategories();
 
@@ -53,40 +52,35 @@ class _SortWidgetState extends State<SortWidget> {
         borderRadius: BorderRadius.circular(AppTheme.radius.md),
         border: Border.all(color: AppTheme.colors.border, width: 1),
       ),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: "Rechercher une dépense...",
-          hintStyle: TextStyle(color: AppTheme.colors.textMuted, fontSize: 14),
-
-          prefixIcon: Icon(
-            Icons.search,
-            color: AppTheme.colors.textMuted,
-            size: 21,
-          ),
-
-          suffixIcon: _editingController.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  _editingController.clear();
-                  widget.onSearch?.call(''); 
-                  setState(() {}); 
-                },
-              )
-            : null,
-
-          border: InputBorder.none,
-
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 13,
-          ),
-        ),
+      child: SearchBar(
         controller: _editingController,
-        onChanged: (value) => {
-          widget.onSearch?.call(value)
-        },
+        hintText: "Rechercher une dépense...",
+        hintStyle: WidgetStateProperty.all(
+          TextStyle(color: AppTheme.colors.textMuted, fontSize: 14),
+        ),
+        elevation: WidgetStateProperty.all(0), 
+        backgroundColor: WidgetStateProperty.all(AppTheme.colors.surface),
 
+        leading: Icon(Icons.search, color: AppTheme.colors.textMuted, size: 21),
+
+        trailing: [
+          if (_editingController.text.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.close, color: AppTheme.colors.textMuted),
+              onPressed: () {
+                _editingController.clear();
+                widget.onSearch?.call('');
+                setState(() {});
+              },
+            ),
+        ],
+
+        onChanged: (value) {
+          widget.onSearch?.call(value);
+          setState(
+            () {},
+          ); 
+        },
       ),
     );
   }
@@ -184,7 +178,7 @@ class _SortWidgetState extends State<SortWidget> {
   }
 
   @override
-  void dispose(){
+  void dispose() {
     _editingController.dispose();
     super.dispose();
   }

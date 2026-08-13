@@ -37,8 +37,8 @@ class _MainPageState extends State<MainPage> {
             label: "Dépenses",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: "Statistiques",
+            icon: Icon(Icons.history),
+            label: "Historique",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
