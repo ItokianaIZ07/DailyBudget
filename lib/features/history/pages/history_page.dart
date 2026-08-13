@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
-import 'package:gestion_depenses/features/statistics/widgets/sort_widget.dart';
+import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 
-class StatisticPage extends StatefulWidget {
-  const StatisticPage({super.key});
+class HistoryPage extends StatefulWidget {
+  int selectedYear;
+  
+  HistoryPage({
+    required this.selectedYear,
+    super.key
+  });
 
   @override
-  State<StatisticPage> createState() => _StatisticPageState();
+  State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _StatisticPageState extends State<StatisticPage> {
+class _HistoryPageState extends State<HistoryPage> {
   // final List<String> _years = ["2026", "2025", "2024", "2023"];
   // String _selectedValue = "";
   final List<Expense> _expenses = [];
