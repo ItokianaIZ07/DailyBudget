@@ -23,6 +23,7 @@ class _MainPageState extends State<MainPage> {
       setState(() {
         _years.clear();
         _years.addAll(years);
+        _years.insert(0, -1);
       });
     }catch(e){
       debugPrint("Erreur lors de l'initialisation des années :$e");
@@ -68,7 +69,7 @@ class _MainPageState extends State<MainPage> {
                     items: _years.map((int year) {
                       return DropdownMenuItem<int>(
                         value: year,
-                        child: Text('$year'),
+                        child: year > 0 ? Text('$year') : Text("Toutes"),
                       );
                     }).toList(),
                     onChanged: (int? newYear) {

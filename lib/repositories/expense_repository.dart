@@ -76,7 +76,23 @@ class ExpenseRepository {
     );
   }
 
-  static Future<List<Expense>> getExpensesByCategory(
+   static Future<List<Expense>> getExpensesByCategory(
+    Category category,
+  ) async {
+    // final debugQuery = await _database.rawQuery("SELECT date, strftime('%Y', date) AS annee_extraite FROM expenses");
+    // debugprint("DEBUG DATES EN BDD : $debugQuery");
+    final List<Map<String, dynamic>> results = await _database.query(
+      _tableName,
+      where: "category_id = ?",
+      whereArgs: [category.id],
+    );
+
+    return results
+        .map((map) => Expense.fromMap(map, category: category))
+        .toList();
+  }
+
+  static Future<List<Expense>> getExpensesByCategoryAndYear(
     Category category,
     int year,
   ) async {
@@ -93,7 +109,37 @@ class ExpenseRepository {
         .toList();
   }
 
-  static Future<List<Expense>> getByKeyword(String keyword, int year) async {
+  static Future<List<Expense>> getByKeyword(String keyword) async {
+    String sql =
+        "SELECT c.id as category_id, c.name, c.color, e.id, e.description, e.date, e.amount FROM expenses e JOIN category c ON c.id = e.category_id WHERE description LIKE ? COLLATE NOCASE ORDER BY date DESC"; // COLLATE NOCASE pour ingorer les majuscules et minuscules
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      "%$keyword%",
+    ]);
+
+    return results.map((element) {
+      Category category = Category(
+        id: element["category_id"],
+        name: element["name"],
+        color: element["color"],
+      );
+
+      Expense expense = Expense(
+        id: element["id"],
+        description: element["description"],
+        amount: element["amount"],
+        category: category,
+        date: DateTime.parse(element["date"]),
+      );
+
+      return expense;
+    }).toList();
+  }
+
+  static Future<List<Expense>> getByKeywordAndYear(
+    String keyword,
+    int year,
+  ) async {
     String sql =
         "SELECT c.id as category_id, c.name, c.color, e.id, e.description, e.date, e.amount FROM expenses e JOIN category c ON c.id = e.category_id WHERE strftime('%Y', e.date) = ? AND description LIKE ? COLLATE NOCASE ORDER BY date DESC"; // COLLATE NOCASE pour ingorer les majuscules et minuscules
 
@@ -151,10 +197,10 @@ class ExpenseRepository {
     }).toList();
   }
 
-  static Future<List<int>> getListYear() async{
+  static Future<List<int>> getListYear() async {
     String sql = "SELECT strftime('%Y', date) as annee FROM $_tableName";
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql);
-    return results.map((element){
+    return results.map((element) {
       return int.parse(element["annee"]);
     }).toList();
   }

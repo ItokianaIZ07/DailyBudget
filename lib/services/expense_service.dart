@@ -77,15 +77,24 @@ class ExpenseService {
   }
 
   static Future<List<Expense>> getByCategory(Category? category, int year) async{
+    if(year < 0 && category == null){
+      return await ExpenseRepository.getAllExpenses();
+    }
+    if(year < 0 && category != null){
+      return await ExpenseRepository.getExpensesByCategory(category);
+    }
     if(category == null){
       return await ExpenseRepository.getByYear(year);
     }
-    
-    return await ExpenseRepository.getExpensesByCategory(category, year);
+
+    return await ExpenseRepository.getExpensesByCategoryAndYear(category, year);
   }
   
   static Future<List<Expense>> searchByKeyWord(String keyword, int year) async{
-    return await ExpenseRepository.getByKeyword(keyword, year);
+    if(year < 0){
+      return await ExpenseRepository.getByKeyword(keyword);
+    }
+    return await ExpenseRepository.getByKeywordAndYear(keyword, year);
   }
 
   static Future<List<Expense>> getByTransactionYear(int year) async{
