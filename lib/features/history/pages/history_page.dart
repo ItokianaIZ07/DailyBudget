@@ -33,7 +33,7 @@ class _HistoryPageState extends State<HistoryPage> {
     });
 
     try {
-      final expenses = await ExpenseService.getByCategory(_selectedCategory);
+      final expenses = await ExpenseService.getByCategory(_selectedCategory, widget.selectedYear);
 
       setState(() {
         _expenses.clear();
@@ -86,7 +86,7 @@ class _HistoryPageState extends State<HistoryPage> {
       return;
     }
     try{
-      final expenses = await ExpenseService.searchByKeyWord(keyword);
+      final expenses = await ExpenseService.searchByKeyWord(keyword, widget.selectedYear);
       setState(() {
         _expenses.clear();
         _expenses.addAll(expenses);
@@ -102,6 +102,15 @@ class _HistoryPageState extends State<HistoryPage> {
     super.initState();
     _loadExpenses();
     // _selectedValue = "2026";
+  }
+
+  @override
+  void didUpdateWidget(covariant HistoryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedYear != widget.selectedYear) {
+      _loadExpenses();
+      debugPrint("${_expenses.length}");
+    }
   }
 
   @override
@@ -122,6 +131,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     padding: const EdgeInsets.all(8),
                     child: SortWidget(
                       selectedCategory: _selectedCategory,
+                      selectedYear: widget.selectedYear,
                       onCategorySelected: (category) {
                         setState(() {
                           _selectedCategory = category;

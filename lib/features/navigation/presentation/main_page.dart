@@ -4,6 +4,7 @@ import 'package:gestion_depenses/features/expense/presentation/expense_page.dart
 import 'package:gestion_depenses/features/settings/pages/setting_page.dart';
 import 'package:gestion_depenses/features/history/pages/history_page.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/services/expense_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -14,6 +15,25 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
   int _selectedYear = DatetimeUtil.getNowYear();
+  final List<int> _years = [];
+
+  Future<void> _loadTransactionYears() async{
+    try{
+      final years = await ExpenseService.getListYearTransaction();
+      setState(() {
+        _years.clear();
+        _years.addAll(years);
+      });
+    }catch(e){
+      debugPrint("Erreur lors de l'initialisation des années :$e");
+    }
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    _loadTransactionYears();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +65,7 @@ class _MainPageState extends State<MainPage> {
                     value: _selectedYear,
                     isDense: true,
                     icon: const Icon(Icons.arrow_drop_down),
-                    items: [2024, 2025, 2026].map((int year) {
+                    items: _years.map((int year) {
                       return DropdownMenuItem<int>(
                         value: year,
                         child: Text('$year'),
@@ -89,5 +109,10 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

@@ -7,12 +7,14 @@ import 'package:gestion_depenses/services/category_service.dart';
 class SortWidget extends StatefulWidget {
   Category? selectedCategory;
   final ValueChanged<Category?> onCategorySelected;
+  int selectedYear;
   final Function(String)? onSearch;
 
   SortWidget({
     required this.selectedCategory,
     required this.onCategorySelected,
     required this.onSearch,
+    required this.selectedYear,
     super.key,
   });
 
@@ -54,7 +56,7 @@ class _SortWidgetState extends State<SortWidget> {
       ),
       child: SearchBar(
         controller: _editingController,
-        hintText: "Rechercher une dépense...",
+        hintText: "Rechercher une dépense de ${widget.selectedYear}...",
         hintStyle: WidgetStateProperty.all(
           TextStyle(color: AppTheme.colors.textMuted, fontSize: 14),
         ),
