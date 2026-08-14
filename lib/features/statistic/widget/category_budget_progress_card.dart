@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/utils/color_utils.dart';
+import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/models/expense_category.dart';
 import 'package:gestion_depenses/services/statistic_service.dart';
 
 class CategoryBudgetProgressCard extends StatelessWidget {
   final ExpenseCategory expense;
-  final progress = StatisticService.getProgress; 
+  final _progress = StatisticService.getProgress;
+  final _formatAr = CurrencyUtil.getFormater(); 
 
-  const CategoryBudgetProgressCard({
+  CategoryBudgetProgressCard({
     super.key,
     required this.expense
   });
@@ -15,9 +17,9 @@ class CategoryBudgetProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color progressColor = Colors.blue;
-    if ( progress.call(expense) >= 0.90) {
+    if ( _progress.call(expense) >= 0.90) {
       progressColor = Colors.red;
-    } else if (progress.call(expense) >= 0.75) {
+    } else if (_progress.call(expense) >= 0.75) {
       progressColor = Colors.orange;
     }
 
@@ -58,7 +60,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "${(progress.call(expense) * 100).toInt()}%",
+                    "${(_progress.call(expense) * 100).toDouble()}%",
                     style: TextStyle(
                       color: progressColor,
                       fontWeight: FontWeight.bold,
@@ -74,7 +76,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "${_formatAmount(expense.amount)} Ar",
+                  _formatAr.format(expense.amount),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -82,7 +84,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  "Limite : ${_formatAmount(expense.category.categoryLimit.amount)} Ar",
+                  "Limite : ${_formatAr.format(expense.category.categoryLimit.amount)}",
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade600,
@@ -95,7 +97,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8), 
               child: LinearProgressIndicator(
-                value: progress.call(expense).clamp(0.0, 1.0), // 0.75 -> 75%
+                value: _progress.call(expense).clamp(0.0, 1.0), // 0.75 -> 75%
                 minHeight: 10,                   // Épaisseur de la barre
                 backgroundColor: Colors.grey.shade200,
                 color: progressColor,
@@ -105,12 +107,5 @@ class CategoryBudgetProgressCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatAmount(double amount) {
-    return amount.toInt().toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => "${m[1]} ",
-        );
   }
 }
