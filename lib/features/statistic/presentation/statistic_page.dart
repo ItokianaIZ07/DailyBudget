@@ -7,7 +7,6 @@ import 'package:gestion_depenses/services/statistic_service.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
 
 class StatisticsPage extends StatefulWidget {
-
   @override
   State<StatisticsPage> createState() => _StatisticsPageState();
 }
@@ -17,35 +16,56 @@ class _StatisticsPageState extends State<StatisticsPage> {
   double _totalExpense = 0;
   final _formatAr = CurrencyUtil.getFormater();
   final List<ExpenseCategory> _expensesCategory = [];
+  double _previousPercentage = 0;
 
-  Future<void> _loadTotalExpense() async{
-    try{
-      final expense = await StatisticService.getTotalExpenseByOption(_selectedPeriod);
+  Future<void> _loadTotalExpense() async {
+    try {
+      final expense = await StatisticService.getTotalExpenseByOption(
+        _selectedPeriod,
+      );
       setState(() {
         _totalExpense = expense;
       });
-    }catch(e){
-      debugPrint("Erreur lors du chargement des dépenses dans statistiques : $e");
+    } catch (e) {
+      debugPrint(
+        "Erreur lors du chargement des dépenses dans statistiques : $e",
+      );
     }
   }
 
-  Future<void> _loadExpensePerCategory() async{
-    try{
-      final expenses = await StatisticService.getTotalExpensePerCategory(_selectedPeriod);
+  Future<void> _loadExpensePerCategory() async {
+    try {
+      final expenses = await StatisticService.getTotalExpensePerCategory(
+        _selectedPeriod,
+      );
       setState(() {
         _expensesCategory.clear();
         _expensesCategory.addAll(expenses);
       });
-    }catch(e){
+    } catch (e) {
+      debugPrint("Erreur lors du chargement des dépenses par catégorie");
+    }
+  }
+
+  Future<void> _loadPreviousPercentage() async {
+    try {
+      final percentage = await StatisticService.getPreviousExpensePourcentage(
+        _selectedPeriod,
+      );
+      setState(() {
+        _previousPercentage = percentage;
+      });
+    } catch (e) {
       debugPrint("Erreur lors du chargement des dépenses par catégorie");
     }
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _loadTotalExpense();
     _loadExpensePerCategory();
+    _loadPreviousPercentage();
   }
 
   @override
@@ -56,7 +76,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           "Statistiques",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: AppTheme.colors.text
+            color: AppTheme.colors.text,
           ),
         ),
         centerTitle: true,
@@ -80,31 +100,63 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Total des dépenses", style: TextStyle(color: Colors.grey)),
+                    const Text(
+                      "Total des dépenses",
+                      style: TextStyle(color: Colors.grey),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           _formatAr.format(_totalExpense),
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade100,
+                            color: _previousPercentage > 0 ? Colors.green.shade100 : AppTheme.colors.dangerSoft,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            "-8.5%",
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "${_previousPercentage > 0?"+" : ""}$_previousPercentage %",
+                                style: TextStyle(
+                                  color: _previousPercentage > 0 ? AppTheme.colors.success: AppTheme.colors.danger,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                StatisticService.getDescription(_selectedPeriod),
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: AppTheme.colors.text,
+                                  fontWeight: FontWeight.bold
+                                ),
+                              ),
+                            ],
                           ),
+                          // child: Text(
+                          //   "$_previousPercentage % ${StatisticService.getDescription(_selectedPeriod)}",
+                          //   style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                          // ),
                         ),
                       ],
                     ),
@@ -125,8 +177,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 LineChartData(
                   gridData: const FlGridData(show: false),
                   titlesData: const FlTitlesData(
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -146,20 +202,22 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Theme.of(context).primaryColor.withOpacity(0.15), // Dégradé sous la courbe
+                        color: Theme.of(context).primaryColor.withOpacity(
+                          0.15,
+                        ), // Dégradé sous la courbe
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16,),
+            const SizedBox(height: 16),
             ListView.builder(
               itemCount: _expensesCategory.length,
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index){
+              itemBuilder: (context, index) {
                 final expense = _expensesCategory[index];
                 return CategoryBudgetProgressCard(expense: expense);
               },
@@ -176,17 +234,18 @@ class _StatisticsPageState extends State<StatisticsPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: (bool selected) {
-        setState((){
+        setState(() {
           _selectedPeriod = index;
           _loadTotalExpense();
           _loadExpensePerCategory();
+          _loadPreviousPercentage();
         });
       },
     );
   }
 
   @override
-  void dispose(){
+  void dispose() {
     super.dispose();
   }
 }

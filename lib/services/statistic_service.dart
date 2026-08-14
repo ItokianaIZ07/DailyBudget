@@ -39,7 +39,9 @@ class StatisticService {
   static Future<List<ExpenseCategory>> getTotalExpensePerCategory(
     int option,
   ) async {
-    String week = DatetimeUtil.formatNumber(DatetimeUtil.getCurrentWeekNumber());
+    String week = DatetimeUtil.formatNumber(
+      DatetimeUtil.getCurrentWeekNumber(),
+    );
     String month = DatetimeUtil.getFormatedMonth();
     String year = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear());
     String condition = "";
@@ -74,5 +76,86 @@ class StatisticService {
     double expenseValue = expense.amount;
 
     return expenseValue / limit;
+  }
+
+  static Future<double> _getTotalExpenseOfPreviousWeek() async {
+    int currentWeek = DatetimeUtil.getCurrentWeekNumber();
+    int currentYear = DatetimeUtil.getNowYear();
+
+    int targetWeek = currentWeek - 1;
+    int targetYear = currentYear;
+
+    if (targetWeek <= 0) {
+      targetWeek = 52; // SQLite %W va jusqu'à la semaine 52 (ou 53)
+      targetYear = currentYear - 1;
+    }
+
+    String weekStr = DatetimeUtil.formatNumber(targetWeek);
+    String yearStr = targetYear.toString();
+
+    return await ExpenseRepository.getExpenseOfTheWeek(weekStr, yearStr);
+  }
+
+  static Future<double> _getTotalExpenseOfPreviousMonth() async {
+    DateTime now = DateTime.now();
+
+    int currentMonth = now.month; // 1 à 12
+    int currentYear = now.year;
+
+    int targetMonth = currentMonth - 1;
+    int targetYear = currentYear;
+
+    if (targetMonth < 1) {
+      targetMonth = 12;
+      targetYear = currentYear - 1;
+    }
+
+    String monthStr = DatetimeUtil.formatNumber(targetMonth);
+    String yearStr = targetYear.toString();
+
+    return await ExpenseRepository.getExpenseOfTheMonth(monthStr, yearStr);
+  }
+
+  static Future<double> _getTotalExpenseOfPreviousYear() async {
+    String year = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear() - 1);
+
+    return await ExpenseRepository.getExpenseOfTheYear(year);
+  }
+
+  static Future<double> getTotalPreviousExpenseByOption(int option) async {
+    switch (option) {
+      case 0:
+        return await _getTotalExpenseOfPreviousWeek();
+      case 1:
+        return await _getTotalExpenseOfPreviousMonth();
+      default:
+        return await _getTotalExpenseOfPreviousYear();
+    }
+  }
+
+  static Future<double> getPreviousExpensePourcentage(int option) async {
+    double actualExpense = await getTotalExpenseByOption(option);
+    double previousExpense = await getTotalPreviousExpenseByOption(option);
+
+    if (previousExpense == 0) {
+      // Si la dépense actuelle est aussi nulle, 0% de variation
+      // Si la dépense actuelle est > 0, augmentation de 100%
+      return actualExpense > 0 ? 100.0 : 0.0;
+    }
+
+    double diff = actualExpense - previousExpense;
+
+    return diff * 100 / previousExpense;  
+  }
+
+  static String getDescription(int option) {
+    switch (option) {
+      case 0:
+        return " par rapport à la semaine précedente";
+      case 1:
+        return " par rapport au mois précedent";
+      default:
+        return " par rapport à l'année précedente";
+    }
   }
 }
