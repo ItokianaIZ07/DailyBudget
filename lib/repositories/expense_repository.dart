@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/models/category_limit.dart';
+import 'package:gestion_depenses/models/category_with_limit.dart';
+import 'package:gestion_depenses/models/expense_category.dart';
 import 'package:sqflite/sqflite.dart';
-
 import 'package:gestion_depenses/core/database/database_service.dart';
 import 'package:gestion_depenses/core/database/tables/expense_table.dart';
 import 'package:gestion_depenses/models/category.dart';
@@ -198,7 +198,8 @@ class ExpenseRepository {
   }
 
   static Future<List<int>> getListYear() async {
-    String sql = "SELECT strftime('%Y', date) as annee FROM $_tableName";
+    String sql =
+        "SELECT DISTINCT strftime('%Y', date) as annee FROM $_tableName ORDER BY annee DESC";
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql);
     return results.map((element) {
       return int.parse(element["annee"]);
@@ -206,11 +207,12 @@ class ExpenseRepository {
   }
 
   static Future<double> getExpenseOfTheWeek(String week, String year) async {
-    double expense = 0;
-
     String sql =
-        "SELECT SUM(amount) as total FROM $_tableName e WHERE strftime('%W', e.date) = ? AND strftime('%Y', e.date) = ?";
-
+        """
+      SELECT COALESCE(SUM(amount), 0.0) as total 
+      FROM $_tableName e 
+      WHERE strftime('%W', e.date) = ? AND strftime('%Y', e.date) = ?
+    """;
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       week,
       year,
@@ -218,45 +220,109 @@ class ExpenseRepository {
 
     // await testDebugDates();
 
-    for(var item in results){
-      expense += item["total"];
+    if (results.isNotEmpty && results.first["total"] != null) {
+      return (results.first["total"] as num).toDouble();
     }
-    return expense;
+    return 0.0;
   }
 
-  static Future<double> getExpenseOfTheMonth(String month, String year) async{
-    double expense = 0;
-
+  static Future<double> getExpenseOfTheMonth(String month, String year) async {
     String sql =
-        "SELECT SUM(amount) as total FROM $_tableName e WHERE strftime('%m', e.date) = ? AND strftime('%Y', e.date) = ?";
+        """
+          SELECT COALESCE(SUM(amount), 0.0) as total 
+          FROM $_tableName e 
+          WHERE strftime('%m', e.date) = ? AND strftime('%Y', e.date) = ?
+        """;
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       month,
       year,
     ]);
 
-
-    for(var item in results){
-      expense += item["total"];
+    if (results.isNotEmpty && results.first["total"] != null) {
+      return (results.first["total"] as num).toDouble();
     }
-    return expense;
+    return 0.0;
   }
 
-  static Future<double> getExpenseOfTheYear(String year) async{
-    double expense = 0;
-
+  static Future<double> getExpenseOfTheYear(String year) async {
     String sql =
-        "SELECT SUM(amount) as total FROM $_tableName e WHERE strftime('%Y', e.date) = ?";
+        """
+          SELECT COALESCE(SUM(amount), 0.0) as total 
+          FROM $_tableName e 
+          WHERE strftime('%Y', e.date) = ?
+        """;
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       year,
     ]);
 
-
-    for(var item in results){
-      expense += item["total"];
+    if (results.isNotEmpty && results.first["total"] != null) {
+      return (results.first["total"] as num).toDouble();
     }
-    return expense;
+    return 0.0;
+  }
+
+  static Future<List<ExpenseCategory>> getExpensePerCategory({
+    required int option,
+    required String week,
+    required String month,
+    required String year,
+    required String condition,
+  }) async {
+    // COALESCE(...) pour remplacer NULL par 0.0
+    String sql =
+        """
+          SELECT 
+            c.id, 
+            c.name, 
+            c.color, 
+            COALESCE(l.amount, 0.0) as limit_amount, 
+            COALESCE(SUM(e.amount), 0.0) as total 
+          FROM category c 
+          LEFT JOIN $_tableName e ON c.id = e.category_id 
+          LEFT JOIN category_limit l ON l.category_id = c.id 
+          $condition
+          GROUP BY c.id, c.name, c.color, l.amount 
+          ORDER BY total DESC
+        """;
+
+    List<String> arguments = [];
+    if (option == 0) {
+      arguments = [week, year];
+    } else if (option == 1) {
+      arguments = [month, year];
+    } else {
+      arguments = [year.toString()];
+    }
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
+    );
+
+    return results.map((element) {
+      Category category = Category(
+        id: element["id"],
+        name: element["name"],
+        color: element["color"],
+      );
+
+      double limitAmount = (element["limit_amount"] as num?)?.toDouble() ?? 0.0;
+      double totalExpense = (element["total"] as num?)?.toDouble() ?? 0.0;
+
+      CategoryLimit limit = CategoryLimit(
+        amount: limitAmount,
+        category: category,
+      );
+
+      CategoryWithLimit categoryWithLimit = CategoryWithLimit(
+        category: category,
+        categoryLimit: limit,
+      );
+
+      return ExpenseCategory(amount: totalExpense, category: categoryWithLimit);
+    }).toList();
   }
 
   //   static Future<void> testDebugDates() async {

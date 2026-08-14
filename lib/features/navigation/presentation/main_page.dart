@@ -18,24 +18,29 @@ class _MainPageState extends State<MainPage> {
   int _selectedYear = DatetimeUtil.getNowYear();
   final List<int> _years = [];
 
-  Future<void> _loadTransactionYears() async{
-    try{
+  Future<void> _loadTransactionYears() async {
+    try {
       final years = await ExpenseService.getListYearTransaction();
       setState(() {
         _years.clear();
         _years.addAll(years);
         _years.insert(0, -1);
-        if(_years.length == 1 || !_years.contains(_selectedYear)){
-          _selectedYear = _years.first;
+        int currentYear = DatetimeUtil.getNowYear();
+        if (!_years.contains(_selectedYear)) {
+          if (_years.contains(currentYear)) {
+            _selectedYear = currentYear;
+          } else {
+            _selectedYear = _years.first;
+          }
         }
       });
-    }catch(e){
+    } catch (e) {
       debugPrint("Erreur lors de l'initialisation des années :$e");
     }
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _loadTransactionYears();
   }
@@ -45,7 +50,7 @@ class _MainPageState extends State<MainPage> {
     final List<Widget> pages = [
       HomePage(),
       ExpensePage(),
-      HistoryPage(selectedYear: _selectedYear,),
+      HistoryPage(selectedYear: _selectedYear),
       StatisticsPage(),
       SettingPage(),
     ];
@@ -53,40 +58,42 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: const Text('Daily Budget'),
         actions: [
-          if(_currentIndex == 2)
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: _selectedYear,
-                    isDense: true,
-                    icon: const Icon(Icons.arrow_drop_down),
-                    items: _years.map((int year) {
-                      return DropdownMenuItem<int>(
-                        value: year,
-                        child: year > 0 ? Text('$year') : Text("Toutes"),
-                      );
-                    }).toList(),
-                    onChanged: (int? newYear) {
-                      if (newYear != null) {
-                        setState(() => _selectedYear = newYear);
-                      }
-                    },
+          if (_currentIndex == 2)
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: _years.contains(_selectedYear)
+                          ? _selectedYear
+                          : (_years.isNotEmpty ? _years.first : null),
+                      isDense: true,
+                      icon: const Icon(Icons.arrow_drop_down),
+                      items: _years.map((int year) {
+                        return DropdownMenuItem<int>(
+                          value: year,
+                          child: year > 0 ? Text('$year') : Text("Toutes"),
+                        );
+                      }).toList(),
+                      onChanged: (int? newYear) {
+                        if (newYear != null) {
+                          setState(() => _selectedYear = newYear);
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
       body: pages[_currentIndex],
@@ -97,6 +104,9 @@ class _MainPageState extends State<MainPage> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 2) {
+            _loadTransactionYears();
+          }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Accueil"),
@@ -110,7 +120,7 @@ class _MainPageState extends State<MainPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: "Statistique"
+            label: "Statistique",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

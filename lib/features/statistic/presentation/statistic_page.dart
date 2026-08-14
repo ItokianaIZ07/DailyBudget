@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/features/statistic/widget/category_budget_progress_card.dart';
+import 'package:gestion_depenses/models/expense_category.dart';
 import 'package:gestion_depenses/services/statistic_service.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
 
@@ -14,6 +16,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   int _selectedPeriod = 1; // 0: Semaine, 1: Mois, 2: Année
   double _totalExpense = 0;
   final _formatAr = CurrencyUtil.getFormater();
+  final List<ExpenseCategory> _expensesCategory = [];
 
   Future<void> _loadTotalExpense() async{
     try{
@@ -26,10 +29,23 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }
   }
 
+  Future<void> _loadExpensePerCategory() async{
+    try{
+      final expenses = await StatisticService.getTotalExpensePerCategory(_selectedPeriod);
+      setState(() {
+        _expensesCategory.clear();
+        _expensesCategory.addAll(expenses);
+      });
+    }catch(e){
+      debugPrint("Erreur lors du chargement des dépenses par catégorie");
+    }
+  }
+
   @override
   void initState(){
     super.initState();
     _loadTotalExpense();
+    _loadExpensePerCategory();
   }
 
   @override
@@ -62,7 +78,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
             ),
             const SizedBox(height: 20),
 
-            // 2. Carte Résumé Global
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -99,7 +114,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
             ),
             const SizedBox(height: 24),
 
-            // 3. Graphique en Courbe (LineChart)
             const Text(
               "Évolution des dépenses",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -139,6 +153,17 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 16,),
+            ListView.builder(
+              itemCount: _expensesCategory.length,
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index){
+                final expense = _expensesCategory[index];
+                return CategoryBudgetProgressCard(expense: expense);
+              },
+            ),
           ],
         ),
       ),
@@ -154,8 +179,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
         setState((){
           _selectedPeriod = index;
           _loadTotalExpense();
+          _loadExpensePerCategory();
         });
       },
     );
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
   }
 }
