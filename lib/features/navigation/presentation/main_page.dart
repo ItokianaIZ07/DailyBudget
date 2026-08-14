@@ -4,6 +4,7 @@ import 'package:gestion_depenses/features/expense/presentation/expense_page.dart
 import 'package:gestion_depenses/features/settings/pages/setting_page.dart';
 import 'package:gestion_depenses/features/history/pages/history_page.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/features/statistic/presentation/statistic_page.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 
 class MainPage extends StatefulWidget {
@@ -45,11 +46,12 @@ class _MainPageState extends State<MainPage> {
       HomePage(),
       ExpensePage(),
       HistoryPage(selectedYear: _selectedYear,),
+      StatisticsPage(),
       SettingPage(),
     ];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Budget Manager'),
+        title: const Text('Daily Budget'),
         actions: [
           if(_currentIndex == 2)
           Padding(
@@ -105,6 +107,10 @@ class _MainPageState extends State<MainPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: "Historique",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: "Statistique"
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

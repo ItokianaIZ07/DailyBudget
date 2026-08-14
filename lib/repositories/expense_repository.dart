@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:gestion_depenses/core/database/database_service.dart';
@@ -76,9 +78,7 @@ class ExpenseRepository {
     );
   }
 
-   static Future<List<Expense>> getExpensesByCategory(
-    Category category,
-  ) async {
+  static Future<List<Expense>> getExpensesByCategory(Category category) async {
     // final debugQuery = await _database.rawQuery("SELECT date, strftime('%Y', date) AS annee_extraite FROM expenses");
     // debugprint("DEBUG DATES EN BDD : $debugQuery");
     final List<Map<String, dynamic>> results = await _database.query(
@@ -204,4 +204,81 @@ class ExpenseRepository {
       return int.parse(element["annee"]);
     }).toList();
   }
+
+  static Future<double> getExpenseOfTheWeek(String week, String year) async {
+    double expense = 0;
+
+    String sql =
+        "SELECT SUM(amount) as total FROM $_tableName e WHERE strftime('%W', e.date) = ? AND strftime('%Y', e.date) = ?";
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      week,
+      year,
+    ]);
+
+    // await testDebugDates();
+
+    for(var item in results){
+      expense += item["total"];
+    }
+    return expense;
+  }
+
+  static Future<double> getExpenseOfTheMonth(String month, String year) async{
+    double expense = 0;
+
+    String sql =
+        "SELECT SUM(amount) as total FROM $_tableName e WHERE strftime('%m', e.date) = ? AND strftime('%Y', e.date) = ?";
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      month,
+      year,
+    ]);
+
+
+    for(var item in results){
+      expense += item["total"];
+    }
+    return expense;
+  }
+
+  static Future<double> getExpenseOfTheYear(String year) async{
+    double expense = 0;
+
+    String sql =
+        "SELECT SUM(amount) as total FROM $_tableName e WHERE strftime('%Y', e.date) = ?";
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      year,
+    ]);
+
+
+    for(var item in results){
+      expense += item["total"];
+    }
+    return expense;
+  }
+
+  //   static Future<void> testDebugDates() async {
+  //   // Sélectionne les dates brutes ainsi que la semaine et l'année calculées par SQLite
+  //   String sql = """
+  //     SELECT
+  //       date,
+  //       strftime('%W', date) AS semaine_sqlite,
+  //       strftime('%Y', date) AS annee_sqlite,
+  //       amount
+  //     FROM $_tableName
+  //     LIMIT 10
+  //   """;
+
+  //   final List<Map<String, dynamic>> results = await _database.rawQuery(sql);
+
+  //   debugPrint("--- TEST DEBUG DATES ---");
+  //   for (var row in results) {
+  //     debugPrint(
+  //       "Date BDD: ${row['date']} | Semaine SQLite: '${row['semaine_sqlite']}' | Année SQLite: '${row['annee_sqlite']}' | Montant: ${row['amount']}"
+  //     );
+  //   }
+  //   debugPrint("------------------------");
+  // }
 }
