@@ -24,6 +24,9 @@ class _MainPageState extends State<MainPage> {
         _years.clear();
         _years.addAll(years);
         _years.insert(0, -1);
+        if(_years.length == 1 || !_years.contains(_selectedYear)){
+          _selectedYear = _years.first;
+        }
       });
     }catch(e){
       debugPrint("Erreur lors de l'initialisation des années :$e");
