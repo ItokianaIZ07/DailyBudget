@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/option_result.dart';
-import 'package:gestion_depenses/services/category_service.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:gestion_depenses/core/utils/color_utils.dart';
 

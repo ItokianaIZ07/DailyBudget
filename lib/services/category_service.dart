@@ -15,7 +15,9 @@ class CategoryService {
     
     OperationResult result = OperationResult(success: false, message: "");
 
-    _validateFieldsValue(result, name, color, amount);
+    if(!_validateFieldsValue(result, name, color, amount)){
+      return result;
+    }
 
     Category category = Category(
       name: name,
@@ -68,28 +70,31 @@ class CategoryService {
     return await CategoryRepository.getCategoriesWithLimit();
   }
 
-  static void _validateFieldsValue(OperationResult result, String name, String color, String amount){
+  static bool _validateFieldsValue(OperationResult result, String name, String color, String amount){
     if (!_isCategoryNameValid(name)) {
       String message = "Veuillez entrer le nom de la catégorie";
       result.message = message;
-      return;
+      return false;
     }
     if (!_isColorValid(color)) {
       String message = "Veuillez choisir une couleur";
       result.message = message;
-      return;
+      return false;
     }
     if (!_isAmountValid(amount)) {
       String message = "Veuillez entrer un nombre positif pour la limite mensuel";
       result.message = message;
-      return;
+      return false;
     }
+    return true;
   }
 
   static Future<OperationResult> updateCategory(String name, String color, String amount, int categoryId, int limitId) async{
     OperationResult result = OperationResult(success: false, message: "");
 
-    _validateFieldsValue(result, name, color, amount);
+    if(!_validateFieldsValue(result, name, color, amount)){
+      return result;
+    }
 
     Category category = Category(
       id: categoryId,
