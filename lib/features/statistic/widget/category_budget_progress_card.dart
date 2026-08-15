@@ -60,7 +60,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "${(_progress.call(expense) * 100).toDouble()}%",
+                    "${(_progress.call(expense) * 100).toDouble().toStringAsFixed(2)}%",
                     style: TextStyle(
                       color: progressColor,
                       fontWeight: FontWeight.bold,
