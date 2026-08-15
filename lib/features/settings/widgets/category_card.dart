@@ -6,6 +6,7 @@ import 'package:gestion_depenses/models/category_with_limit.dart';
 
 class CategoryCard extends StatelessWidget {
   final _formatAr = CurrencyUtil.getFormater();
+
   final CategoryWithLimit _category;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -27,7 +28,8 @@ class CategoryCard extends StatelessWidget {
         return AlertDialog(
           title: const Text("Supprimer la catégorie ?"),
           content: const Text(
-            "Cette action supprimera aussi les dépenses associés. Voulez-vous vraiment supprimer cette dépense ?",
+            "Cette action supprimera aussi les dépenses associées. "
+            "Voulez-vous vraiment supprimer cette catégorie ?",
           ),
           actions: [
             TextButton(
@@ -36,7 +38,6 @@ class CategoryCard extends StatelessWidget {
               },
               child: const Text("Annuler"),
             ),
-
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context, true);
@@ -49,78 +50,108 @@ class CategoryCard extends StatelessWidget {
     );
 
     if (confirmed == true) {
-      onDelete.call();
+      onDelete();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final categoryName = _category.toMap()['name'] as String;
+    final categoryColor = parseColor(_category.toMap()['color']);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.colors.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.colors.shadow.withValues(alpha: 0.15),
+            offset: const Offset(0, 3),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  categoryName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.colors.text,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Wrap(
+                  spacing: 4,
+                  children: [
+                    Text(
+                      "Limite mensuelle",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.colors.textMuted,
+                      ),
+                    ),
+                    Text(
+                      _formatAr.format(_category.categoryLimit.amount),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.colors.text,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Actions
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _category.toMap()['name'],
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.colors.text,
-                  fontWeight: FontWeight.bold
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: categoryColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(width: 2),
 
-              Row(
-                children: [
-                  const Text("Limite mensuelle "),
-                  Text(
-                    _formatAr.format(_category.categoryLimit.amount),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.colors.text,
-                    ),
-                  ),
-                ],
+              IconButton(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined, size: 21),
+                color: AppTheme.colors.primary,
+                visualDensity: VisualDensity.compact,
+              ),
+
+              IconButton(
+                onPressed: () {
+                  _confirmDelete(context, _category);
+                },
+                icon: const Icon(Icons.delete_outline, size: 21),
+                color: AppTheme.colors.danger,
+                visualDensity: VisualDensity.compact,
               ),
             ],
           ),
-        ),
-
-        const SizedBox(width: 24),
-
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: parseColor(_category.toMap()['color']),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            IconButton(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined),
-              color: AppTheme.colors.primary,
-            ),
-
-            IconButton(
-              onPressed: () {
-                _confirmDelete(context, _category);
-              },
-              icon: const Icon(Icons.delete_outline),
-              color: AppTheme.colors.danger,
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

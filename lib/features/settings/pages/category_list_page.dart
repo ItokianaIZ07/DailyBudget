@@ -86,27 +86,33 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Widget _buildCategoryList() {
-    return ListView.separated(
-      itemCount: _categories.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final category = _categories[index];
+  return ListView.separated(
+    padding: const EdgeInsets.fromLTRB(
+      16,
+      16,
+      16,
+      100, // espace pour le FloatingActionButton
+    ),
+    itemCount: _categories.length,
+    separatorBuilder: (context, index) => const SizedBox(height: 12),
+    itemBuilder: (context, index) {
+      final category = _categories[index];
 
-        return CategoryCard(
-          category: category,
-          onEdit: (){
-            _openCategoryFormPage(
-              title: "Modifier la catégorie",
-              category: category
-            );
-          },
-          onDelete: () {
-            _deleteCategory(category: category);
-          },
-        );
-      },
-    );
-  }
+      return CategoryCard(
+        category: category,
+        onEdit: () {
+          _openCategoryFormPage(
+            title: "Modifier la catégorie",
+            category: category,
+          );
+        },
+        onDelete: () {
+          _deleteCategory(category: category);
+        },
+      );
+    },
+  );
+}
 
   Future<void> _openCategoryFormPage({
     required String title,

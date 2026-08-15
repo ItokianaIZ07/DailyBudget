@@ -104,4 +104,8 @@ class ExpenseService {
   static Future<List<int>> getListYearTransaction() async{
     return await ExpenseRepository.getListYear();
   }
+
+  static Future<void> deleteAllExpenses() async{
+    await ExpenseRepository.deleteAllExpenses();
+  }
 }

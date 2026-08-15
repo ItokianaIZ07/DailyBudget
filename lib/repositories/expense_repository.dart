@@ -434,6 +434,10 @@ class ExpenseRepository {
     return yearlyData;
   }
 
+  static Future<void> deleteAllExpenses()async{
+    await _database.delete(_tableName);
+  }
+
   //   static Future<void> testDebugDates() async {
   //   // Sélectionne les dates brutes ainsi que la semaine et l'année calculées par SQLite
   //   String sql = """
