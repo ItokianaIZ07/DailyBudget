@@ -37,7 +37,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: parseColor(expense.category.category.color!).withOpacity(0.15),
+                      backgroundColor: parseColor(expense.category.category.color!).withValues(alpha: 0.15),
                       child: Icon(
                         Icons.category_outlined, 
                         color: parseColor(expense.category.category.color!),
@@ -56,7 +56,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: progressColor.withOpacity(0.15),
+                    color: progressColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

@@ -145,7 +145,7 @@ class StatisticService {
 
     double diff = actualExpense - previousExpense;
 
-    return diff * 100 / previousExpense;  
+    return diff * 100 / previousExpense;
   }
 
   static String getDescription(int option) {
@@ -156,6 +156,99 @@ class StatisticService {
         return " par rapport au mois précedent";
       default:
         return " par rapport à l'année précedente";
+    }
+  }
+
+  static Future<Map<int, double>> _getDailyExpenseEvolution() async {
+    String week = DatetimeUtil.formatNumber(
+      DatetimeUtil.getCurrentWeekNumber(),
+    );
+    String year = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear());
+
+    return await ExpenseRepository.getDailyExpense(week, year);
+  }
+
+  static Future<Map<int, double>> _getDailyMonthlyExpenseEvolution() async {
+    String month = DatetimeUtil.getFormatedMonth();
+    String year = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear());
+
+    return await ExpenseRepository.getMonthlyDailyExpense(month, year);
+  }
+
+  static Future<Map<int, double>> _getYearlyMonthlyExpenseEvolution() async {
+    String year = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear());
+
+    return await ExpenseRepository.getYearlyMonthlyExpense(year);
+  }
+
+  static Future<Map<int, double>> getExpenseEvolutionByPeriod(
+    int option,
+  ) async {
+    switch (option) {
+      case 0:
+        return await _getDailyExpenseEvolution();
+      case 1:
+        return await _getDailyMonthlyExpenseEvolution();
+      default:
+        return await _getYearlyMonthlyExpenseEvolution();
+    }
+  }
+
+  static Future<Map<int, double>> _getPreviousDailyExpenseEvolution() async {
+    int currentWeek = DatetimeUtil.getCurrentWeekNumber();
+    int currentYear = DatetimeUtil.getNowYear();
+
+    int targetWeek = currentWeek - 1;
+    int targetYear = currentYear;
+
+    if (targetWeek <= 0) {
+      targetWeek = 52;
+      targetYear = currentYear - 1;
+    }
+
+    String weekStr = DatetimeUtil.formatNumber(targetWeek);
+    String yearStr = targetYear.toString();
+
+    return await ExpenseRepository.getDailyExpense(weekStr, yearStr);
+  }
+
+  static Future<Map<int, double>> _getPreviousDailyMonthlyExpenseEvolution() async {
+    DateTime now = DateTime.now();
+
+    int currentMonth = now.month;
+    int currentYear = now.year;
+
+    int targetMonth = currentMonth - 1;
+    int targetYear = currentYear;
+
+    if (targetMonth < 1) {
+      targetMonth = 12; // Décembre
+      targetYear = currentYear - 1;
+    }
+
+    String monthStr = DatetimeUtil.formatNumber(targetMonth);
+    String yearStr = targetYear.toString();
+
+    return await ExpenseRepository.getMonthlyDailyExpense(monthStr, yearStr);
+  }
+
+  static Future<Map<int, double>> _getPreviousYearlyMonthlyExpenseEvolution() async {
+    String previousYear = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear() - 1);
+
+
+    return await ExpenseRepository.getYearlyMonthlyExpense(previousYear);
+  }
+
+  static Future<Map<int, double>> getPreviousExpenseEvolutionByPeriod(
+    int option,
+  ) async {
+    switch (option) {
+      case 0:
+        return await _getPreviousDailyExpenseEvolution();
+      case 1:
+        return await _getPreviousDailyMonthlyExpenseEvolution();
+      default:
+        return await _getPreviousYearlyMonthlyExpenseEvolution();
     }
   }
 }

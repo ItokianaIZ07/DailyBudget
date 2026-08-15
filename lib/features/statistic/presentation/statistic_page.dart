@@ -17,6 +17,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   final _formatAr = CurrencyUtil.getFormater();
   final List<ExpenseCategory> _expensesCategory = [];
   double _previousPercentage = 0;
+  final List<FlSpot> _expensePerPeriod = [];
+  final List<FlSpot> _previousExpensePerPeriod = [];
 
   Future<void> _loadTotalExpense() async {
     try {
@@ -60,12 +62,57 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }
   }
 
+  Future<void> _loadPeriodicData() async {
+    try {
+      final data = await StatisticService.getExpenseEvolutionByPeriod(
+        _selectedPeriod,
+      );
+      setState(() {
+        _expensePerPeriod.clear();
+        data.forEach((period, expense) {
+          if (period == 0) {
+            _expensePerPeriod.insert(0, FlSpot(period.toDouble(), expense));
+          } else {
+            _expensePerPeriod.add(FlSpot(period.toDouble(), expense));
+          }
+        });
+      });
+    } catch (e) {
+      debugPrint("Erreur lors du chargement des dépenses par catégorie");
+    }
+  }
+
+  Future<void> _loadPreviousPeriodicData() async {
+    try {
+      final data = await StatisticService.getPreviousExpenseEvolutionByPeriod(
+        _selectedPeriod,
+      );
+      setState(() {
+        _previousExpensePerPeriod.clear();
+        data.forEach((period, expense) {
+          if (period == 0) {
+            _previousExpensePerPeriod.insert(
+              0,
+              FlSpot(period.toDouble(), expense),
+            );
+          } else {
+            _previousExpensePerPeriod.add(FlSpot(period.toDouble(), expense));
+          }
+        });
+      });
+    } catch (e) {
+      debugPrint("Erreur lors du chargement des dépenses par catégorie");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadTotalExpense();
     _loadExpensePerCategory();
     _loadPreviousPercentage();
+    _loadPeriodicData();
+    _loadPreviousPeriodicData();
   }
 
   @override
@@ -129,7 +176,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: _previousPercentage > 0 ? Colors.green.shade100 : AppTheme.colors.dangerSoft,
+                            color: _previousPercentage > 0
+                                ? Colors.green.shade100
+                                : AppTheme.colors.dangerSoft,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -137,26 +186,26 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "${_previousPercentage > 0?"+" : ""}$_previousPercentage %",
+                                "${_previousPercentage > 0 ? "+" : ""}$_previousPercentage %",
                                 style: TextStyle(
-                                  color: _previousPercentage > 0 ? AppTheme.colors.success: AppTheme.colors.danger,
+                                  color: _previousPercentage > 0
+                                      ? AppTheme.colors.success
+                                      : AppTheme.colors.danger,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                StatisticService.getDescription(_selectedPeriod),
+                                StatisticService.getDescription(
+                                  _selectedPeriod,
+                                ),
                                 style: TextStyle(
                                   fontSize: 8,
                                   color: AppTheme.colors.text,
-                                  fontWeight: FontWeight.bold
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
-                          // child: Text(
-                          //   "$_previousPercentage % ${StatisticService.getDescription(_selectedPeriod)}",
-                          //   style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                          // ),
                         ),
                       ],
                     ),
@@ -187,28 +236,89 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
-                      spots: const [
-                        FlSpot(1, 20),
-                        FlSpot(2, 50),
-                        FlSpot(3, 30),
-                        FlSpot(4, 80),
-                        FlSpot(5, 45),
-                        FlSpot(6, 90),
-                      ],
-                      isCurved: true, // Courbe fluide
+                      spots: _expensePerPeriod,
+                      isCurved:
+                          false, // false mba hi-evitena anazy hidina any @valeur négatif hi-reliena anle point roa(ref mielanelana b)
                       color: Theme.of(context).primaryColor,
                       barWidth: 4,
                       isStrokeCapRound: true,
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Theme.of(context).primaryColor.withOpacity(
-                          0.15,
+                        color: Theme.of(context).primaryColor.withValues(
+                          alpha: 0.15,
                         ), // Dégradé sous la courbe
+                      ),
+                    ),
+                    LineChartBarData(
+                      spots: _previousExpensePerPeriod,
+                      isCurved: false,
+                      color: AppTheme.colors.accent,
+                      barWidth: 4,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: AppTheme.colors.accentSoft.withValues(
+                          alpha: 0.15,
+                        ),
                       ),
                     ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 48,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 16,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Actuel",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 16,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: AppTheme.colors.accent,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Précedent",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -239,6 +349,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
           _loadTotalExpense();
           _loadExpensePerCategory();
           _loadPreviousPercentage();
+          _loadPeriodicData();
+          _loadPreviousPeriodicData();
         });
       },
     );

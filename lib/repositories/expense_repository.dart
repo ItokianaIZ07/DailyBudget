@@ -325,6 +325,115 @@ class ExpenseRepository {
     }).toList();
   }
 
+  static Future<Map<int, double>> getDailyExpense(
+    String week,
+    String year,
+  ) async {
+    String sql =
+        """
+      SELECT 
+        strftime('%w', date) as day_index,
+        COALESCE(SUM(amount), 0.0) as total
+      FROM $_tableName
+      WHERE strftime('%W', date) = ? AND strftime('%Y', date) = ?
+      GROUP BY day_index
+    """;
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      week,
+      year,
+    ]);
+
+    Map<int, double> weeklyData = {
+      1: 0.0, // Lundi
+      2: 0.0, // Mardi
+      3: 0.0, // Mercredi
+      4: 0.0, // Jeudi
+      5: 0.0, // Vendredi
+      6: 0.0, // Samedi
+      7: 0.0, // Dimanche (0 dans SQLite)
+    };
+
+    for (var data in results) {
+      int dayIndex = int.parse(data["day_index"]);
+      double total = (data["total"] as num).toDouble();
+      if (dayIndex == 0) {
+        weeklyData[7] = total;
+      } else {
+        weeklyData[dayIndex] = total;
+      }
+    }
+
+    return weeklyData;
+  }
+
+  static Future<Map<int, double>> getMonthlyDailyExpense(
+    String month, 
+    String year, 
+  ) async {
+    int monthInt = int.parse(month);
+    int yearInt = int.parse(year);
+    int daysInMonth = DateTime(yearInt, monthInt + 1, 0).day;
+
+    Map<int, double> monthlyData = {
+      for (int i = 1; i <= daysInMonth; i++) i: 0.0,
+    };
+
+    // groupe par jour du mois ('%d')
+    String sql =
+        """
+        SELECT 
+          strftime('%d', date) as day_of_month,
+          COALESCE(SUM(amount), 0.0) as total
+        FROM $_tableName
+        WHERE strftime('%m', date) = ? AND strftime('%Y', date) = ?
+        GROUP BY day_of_month
+      """;
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      month,
+      year,
+    ]);
+
+    for (var data in results) {
+      int day = int.parse(data["day_of_month"]);
+      double total = (data["total"] as num).toDouble();
+      monthlyData[day] = total;
+    }
+
+    return monthlyData;
+  }
+
+  static Future<Map<int, double>> getYearlyMonthlyExpense(
+    String year, 
+  ) async {
+    Map<int, double> yearlyData = {
+      for (int month = 1; month <= 12; month++) month: 0.0,
+    };
+
+    String sql =
+        """
+        SELECT 
+          strftime('%m', date) as month_index,
+          COALESCE(SUM(amount), 0.0) as total
+        FROM $_tableName
+        WHERE strftime('%Y', date) = ?
+        GROUP BY month_index
+      """;
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      year,
+    ]);
+
+    for (var data in results) {
+      int monthIndex = int.parse(data["month_index"]);
+      double total = (data["total"] as num).toDouble();
+      yearlyData[monthIndex] = total;
+    }
+
+    return yearlyData;
+  }
+
   //   static Future<void> testDebugDates() async {
   //   // Sélectionne les dates brutes ainsi que la semaine et l'année calculées par SQLite
   //   String sql = """
