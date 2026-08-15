@@ -186,7 +186,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "${_previousPercentage > 0 ? "+" : ""}$_previousPercentage %",
+                                "${_previousPercentage > 0 ? "+" : ""}${_previousPercentage.toStringAsFixed(2)} %",
                                 style: TextStyle(
                                   color: _previousPercentage > 0
                                       ? AppTheme.colors.success

@@ -56,11 +56,12 @@ class _SortWidgetState extends State<SortWidget> {
       ),
       child: SearchBar(
         controller: _editingController,
-        hintText: "Rechercher une dépense de ${widget.selectedYear}...",
+        hintText:
+            "Rechercher une dépense ${widget.selectedYear >= 0 ? "de ${widget.selectedYear}" : ""}...",
         hintStyle: WidgetStateProperty.all(
           TextStyle(color: AppTheme.colors.textMuted, fontSize: 14),
         ),
-        elevation: WidgetStateProperty.all(0), 
+        elevation: WidgetStateProperty.all(0),
         backgroundColor: WidgetStateProperty.all(AppTheme.colors.surface),
 
         leading: Icon(Icons.search, color: AppTheme.colors.textMuted, size: 21),
@@ -79,9 +80,7 @@ class _SortWidgetState extends State<SortWidget> {
 
         onChanged: (value) {
           widget.onSearch?.call(value);
-          setState(
-            () {},
-          ); 
+          setState(() {});
         },
       ),
     );
