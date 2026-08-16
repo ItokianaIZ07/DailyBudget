@@ -191,7 +191,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                   color: _previousPercentage > 0
                                       ? AppTheme.colors.success
                                       : _previousPercentage == 0
-                                      ? AppTheme.colors.successSoft
+                                      ? AppTheme.colors.primary.withValues(alpha: 0.75) 
                                       : AppTheme.colors.danger,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -290,11 +290,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
                       const SizedBox(width: 8),
                       Text(
-                        _selectedPeriod == 0
-                            ? "Semaine actuelle"
-                            : _selectedPeriod == 1
-                            ? "Mois actuel"
-                            : "Année actuelle",
+                        _selectedPeriod == 0 ? "Semaine actuelle" : _selectedPeriod == 1 ? "Mois actuel": "Année actuelle",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -316,11 +312,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
                       const SizedBox(width: 8),
                       Text(
-                        _selectedPeriod == 0
-                            ? "Semaine précedente"
-                            : _selectedPeriod == 1
-                            ? "Mois précedent"
-                            : "Année précedente",
+                        _selectedPeriod == 0 ? "Semaine précedente" : _selectedPeriod == 1 ? "Mois précedent": "Année précedente",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -339,10 +331,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 final expense = _expensesCategory[index];
-                return CategoryBudgetProgressCard(
-                  expense: expense,
-                  period: _selectedPeriod,
-                );
+                return CategoryBudgetProgressCard(expense: expense, period: _selectedPeriod,);
               },
             ),
           ],
