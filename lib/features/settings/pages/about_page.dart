@@ -53,7 +53,7 @@ class AboutPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Daily Budget',
+            'SpendWise',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -245,7 +245,7 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 12),
 
           Text(
-            'Budget Manager a été conçu pour aider à enregistrer '
+            'SpendWise a été conçu pour aider à enregistrer '
             'rapidement les dépenses, visualiser les tendances mensuelles '
             'et mieux organiser ses finances personnelles.',
             style: TextStyle(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/features/home/presentation/home_page.dart';
 import 'package:gestion_depenses/features/expense/presentation/expense_page.dart';
 import 'package:gestion_depenses/features/settings/pages/setting_page.dart';
@@ -56,7 +57,13 @@ class _MainPageState extends State<MainPage> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Budget'),
+        title: Text(
+          'SpendWise',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.colors.primary.withValues(alpha: 0.75),
+          ),
+        ),
         actions: [
           if (_currentIndex == 2)
             Padding(
@@ -97,37 +104,52 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
       body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          if (index == 2) {
-            _loadTransactionYears();
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Accueil"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.payments),
-            label: "Dépenses",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: "Historique",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: "Statistique",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Paramètres",
-          ),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return NavigationBar(
+      selectedIndex: _currentIndex,
+      elevation: 3,
+      height: 65,
+      indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      onDestinationSelected: (int index) {
+        setState(() {
+          _currentIndex = index;
+        });
+        if (index == 2) {
+          _loadTransactionYears();
+        }
+      },
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: Colors.teal),
+          label: "Accueil",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.payments_outlined),
+          selectedIcon: Icon(Icons.payments, color: Colors.teal),
+          label: "Dépenses",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.history_outlined),
+          selectedIcon: Icon(Icons.history, color: Colors.teal),
+          label: "Historique",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart, color: Colors.teal),
+          label: "Statistique",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings, color: Colors.teal),
+          label: "Paramètres",
+        ),
+      ],
     );
   }
 

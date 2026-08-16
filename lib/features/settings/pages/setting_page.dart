@@ -187,7 +187,7 @@ class SettingPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "\u00A9${DatetimeUtil.getNowYear()} - Daily Budget by ItokianaIZ07. Compte bien, dépense peu",
+            "\u00A9${DatetimeUtil.getNowYear()} - SpendWise by ItokianaIZ07. Compte bien, dépense peu",
             style: TextStyle(color: AppTheme.colors.textMuted, fontSize: 10),
           ),
         ],
