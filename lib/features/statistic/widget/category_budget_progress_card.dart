@@ -7,19 +7,23 @@ import 'package:gestion_depenses/services/statistic_service.dart';
 class CategoryBudgetProgressCard extends StatelessWidget {
   final ExpenseCategory expense;
   final _progress = StatisticService.getProgress;
-  final _formatAr = CurrencyUtil.getFormater(); 
+  final _formatAr = CurrencyUtil.getFormater();
+  final _getLimitLabel = StatisticService.getLimitLabel;
+  final _calculLimitPerPeriod = StatisticService.adjustLimitByPeriod;
+  final int period;
 
   CategoryBudgetProgressCard({
     super.key,
-    required this.expense
+    required this.expense,
+    required this.period,
   });
 
   @override
   Widget build(BuildContext context) {
     Color progressColor = Colors.blue;
-    if ( _progress.call(expense) >= 0.90) {
+    if (_progress.call(expense, period) >= 0.90 && period != 0) {
       progressColor = Colors.red;
-    } else if (_progress.call(expense) >= 0.75) {
+    } else if (_progress.call(expense, period) >= 0.75) {
       progressColor = Colors.orange;
     }
 
@@ -37,9 +41,11 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: parseColor(expense.category.category.color!).withValues(alpha: 0.15),
+                      backgroundColor: parseColor(
+                        expense.category.category.color!,
+                      ).withValues(alpha: 0.15),
                       child: Icon(
-                        Icons.category_outlined, 
+                        Icons.category_outlined,
                         color: parseColor(expense.category.category.color!),
                       ),
                     ),
@@ -54,13 +60,16 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: progressColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "${(_progress.call(expense) * 100).toDouble().toStringAsFixed(2)}%",
+                    "${(_progress.call(expense, period) * 100).toDouble().toStringAsFixed(2)}%",
                     style: TextStyle(
                       color: progressColor,
                       fontWeight: FontWeight.bold,
@@ -83,22 +92,45 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                     color: progressColor,
                   ),
                 ),
-                Text(
-                  "Limite : ${_formatAr.format(expense.category.categoryLimit.amount)}",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getLimitLabel(period),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatAr.format(
+                        _calculLimitPerPeriod(
+                          limiteMensuelle:
+                              expense.category.categoryLimit.amount,
+                          period: period,
+                        ),
+                      ),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 8),
 
             ClipRRect(
-              borderRadius: BorderRadius.circular(8), 
+              borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: _progress.call(expense).clamp(0.0, 1.0), // 0.75 -> 75%
-                minHeight: 10,                   // Épaisseur de la barre
+                value: _progress.call(expense, period).clamp(0.0, 1.0), // 0.75 -> 75%
+                minHeight: 10, // Épaisseur de la barre
                 backgroundColor: Colors.grey.shade200,
                 color: progressColor,
               ),

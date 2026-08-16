@@ -71,13 +71,6 @@ class StatisticService {
     );
   }
 
-  static double getProgress(ExpenseCategory expense) {
-    double limit = expense.category.categoryLimit.amount;
-    double expenseValue = expense.amount;
-
-    return expenseValue / limit;
-  }
-
   static Future<double> _getTotalExpenseOfPreviousWeek() async {
     int currentWeek = DatetimeUtil.getCurrentWeekNumber();
     int currentYear = DatetimeUtil.getNowYear();
@@ -212,7 +205,8 @@ class StatisticService {
     return await ExpenseRepository.getDailyExpense(weekStr, yearStr);
   }
 
-  static Future<Map<int, double>> _getPreviousDailyMonthlyExpenseEvolution() async {
+  static Future<Map<int, double>>
+  _getPreviousDailyMonthlyExpenseEvolution() async {
     DateTime now = DateTime.now();
 
     int currentMonth = now.month;
@@ -232,9 +226,11 @@ class StatisticService {
     return await ExpenseRepository.getMonthlyDailyExpense(monthStr, yearStr);
   }
 
-  static Future<Map<int, double>> _getPreviousYearlyMonthlyExpenseEvolution() async {
-    String previousYear = DatetimeUtil.formatNumber(DatetimeUtil.getNowYear() - 1);
-
+  static Future<Map<int, double>>
+  _getPreviousYearlyMonthlyExpenseEvolution() async {
+    String previousYear = DatetimeUtil.formatNumber(
+      DatetimeUtil.getNowYear() - 1,
+    );
 
     return await ExpenseRepository.getYearlyMonthlyExpense(previousYear);
   }
@@ -249,6 +245,49 @@ class StatisticService {
         return await _getPreviousDailyMonthlyExpenseEvolution();
       default:
         return await _getPreviousYearlyMonthlyExpenseEvolution();
+    }
+  }
+
+  static double adjustLimitByPeriod({
+    required double limiteMensuelle,
+    required int period,
+  }) {
+    switch (period) {
+      case 0:
+        int month = DatetimeUtil.getNowMonth();
+        int year = DatetimeUtil.getNowYear();
+        double weekNbr = _getExactFractionalWeeksInMonth(year, month);
+        return limiteMensuelle / weekNbr;
+      case 1:
+        return limiteMensuelle;
+      default:
+        return limiteMensuelle * 12.0;
+    }
+  }
+
+  static double _getExactFractionalWeeksInMonth(int year, int month) {
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    return daysInMonth / 7.0; // nombre de semaine
+  }
+
+  static double getProgress(ExpenseCategory expense, int period) {
+    double limit = adjustLimitByPeriod(
+      limiteMensuelle: expense.category.categoryLimit.amount,
+      period: period,
+    );
+    double expenseValue = expense.amount;
+
+    return expenseValue / limit;
+  }
+
+  static String getLimitLabel(int periode) {
+    switch (periode) {
+      case 0:
+        return "lim hebdo(approximatif)";
+      case 1:
+        return "limite mensuelle";
+      default:
+        return "limite annuelle";
     }
   }
 }
