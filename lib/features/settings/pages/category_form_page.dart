@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/option_result.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -30,7 +31,7 @@ class CategoryFormPage extends StatefulWidget {
 class _CategoryFormPageState extends State<CategoryFormPage> {
   late TextEditingController _nameEditingController;
   late TextEditingController _amountEditingController;
-  Color _currentColor = Colors.blue;
+  Color _currentColor = AppTheme.colors.primary;
 
   void changeColor(Color color) => setState(() => _currentColor = color);
 
@@ -70,7 +71,7 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
                     borderRadius: BorderRadius.circular(4),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color.fromARGB(90, 36, 36, 36),
+                        color: AppTheme.colors.shadow.withValues(alpha: 0.35),
                         offset: Offset(2, 2),
                       ),
                     ],
@@ -132,11 +133,11 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.error, color: Colors.red),
-              SizedBox(width: 8),
-              Text('Erreur'),
+              Icon(Icons.error, color: AppTheme.colors.danger),
+              const SizedBox(width: 8),
+              const Text('Erreur'),
             ],
           ),
           content: Text(message),
@@ -158,11 +159,11 @@ class _CategoryFormPageState extends State<CategoryFormPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.check, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Success'),
+              Icon(Icons.check, color: AppTheme.colors.success),
+              const SizedBox(width: 8),
+              const Text('Success'),
             ],
           ),
           content: Text(message),

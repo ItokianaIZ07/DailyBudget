@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/color_utils.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/models/expense_category.dart';
@@ -20,11 +21,11 @@ class CategoryBudgetProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color progressColor = Colors.blue;
+    Color progressColor = AppTheme.colors.primary;
     if (_progress.call(expense, period) >= 0.90 && period != 0) {
-      progressColor = Colors.red;
+      progressColor = AppTheme.colors.danger;
     } else if (_progress.call(expense, period) >= 0.75) {
-      progressColor = Colors.orange;
+      progressColor = AppTheme.colors.accent;
     }
 
     return Card(
@@ -100,7 +101,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
+                        color: AppTheme.colors.textMuted,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -117,7 +118,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        color: AppTheme.colors.text,
                       ),
                     ),
                   ],
@@ -131,7 +132,7 @@ class CategoryBudgetProgressCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: _progress.call(expense, period).clamp(0.0, 1.0), // 0.75 -> 75%
                 minHeight: 10, // Épaisseur de la barre
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: AppTheme.colors.surfaceMuted,
                 color: progressColor,
               ),
             ),

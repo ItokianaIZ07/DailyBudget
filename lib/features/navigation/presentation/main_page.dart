@@ -75,7 +75,7 @@ class _MainPageState extends State<MainPage> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.colors.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -123,30 +123,30 @@ class _MainPageState extends State<MainPage> {
           _loadTransactionYears();
         }
       },
-      destinations: const [
+      destinations: [
         NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home, color: Colors.teal),
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: AppTheme.colors.secondary),
           label: "Accueil",
         ),
         NavigationDestination(
-          icon: Icon(Icons.payments_outlined),
-          selectedIcon: Icon(Icons.payments, color: Colors.teal),
+          icon: const Icon(Icons.payments_outlined),
+          selectedIcon: Icon(Icons.payments, color: AppTheme.colors.secondary),
           label: "Dépenses",
         ),
         NavigationDestination(
-          icon: Icon(Icons.history_outlined),
-          selectedIcon: Icon(Icons.history, color: Colors.teal),
+          icon: const Icon(Icons.history_outlined),
+          selectedIcon: Icon(Icons.history, color: AppTheme.colors.secondary),
           label: "Historique",
         ),
         NavigationDestination(
-          icon: Icon(Icons.bar_chart_outlined),
-          selectedIcon: Icon(Icons.bar_chart, color: Colors.teal),
+          icon: const Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart, color: AppTheme.colors.secondary),
           label: "Statistique",
         ),
         NavigationDestination(
-          icon: Icon(Icons.settings_outlined),
-          selectedIcon: Icon(Icons.settings, color: Colors.teal),
+          icon: const Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings, color: AppTheme.colors.secondary),
           label: "Paramètres",
         ),
       ],

@@ -87,7 +87,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -98,6 +97,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final totalDepense = ExpenseService.sumExpenseAmount(_expenses);
+
     return Scaffold(
       backgroundColor: AppTheme.colors.background,
       body: SafeArea(
@@ -108,80 +109,140 @@ class _HomePageState extends State<HomePage> {
                 ),
               )
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: AppTheme.spacing.sm,
                   children: [
-                    // ------------------------------------------------
-                    // HEADER
-                    // ------------------------------------------------
                     HomePageHeader(title: "Bienvenue", date: date),
-
-                    // ------------------------------------------------
-                    // STATISTIQUES
-                    // ------------------------------------------------
+                    const SizedBox(height: 20),
+                    Text(
+                      'Vue d’ensemble',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.colors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     SizedBox(
-                      height: 104,
+                      height: 170,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.zero,
                         children: [
                           SizedBox(
-                            width: 220,
+                            width: 230,
                             child: StatCard(
-                              title: "Montant des dépenses effectuées",
-                              mainContent: _formatAr.format(
-                                ExpenseService.sumExpenseAmount(_expenses),
-                              ),
+                              title: 'Dépenses totales',
+                              mainContent: _formatAr.format(totalDepense),
+                              icon: Icons.payments_outlined,
+                              accentColor: AppTheme.colors.primary,
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
                           SizedBox(
                             width: 180,
                             child: StatCard(
-                              title: "Dépenses effectuées",
+                              title: 'Transactions',
                               mainContent: _expenses.length.toString(),
+                              icon: Icons.receipt_long_outlined,
+                              accentColor: AppTheme.colors.secondary,
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                    // ------------------------------------------------
-                    // LISTE DES DEPENSES
-                    // ------------------------------------------------
-                    AnimatedList(
-                      key: _expenseListKey,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      initialItemCount: _expenses.length,
-                      itemBuilder:
-                          (
-                            BuildContext context,
-                            int index,
-                            Animation<double> animation,
-                          ) {
-                            final expense = _expenses[index];
-
-                            return FadeTransition(
-                              opacity: animation,
-                              child: SizeTransition(
-                                sizeFactor: animation,
-                                child: ExpenseCard(
-                                  description: expense.description,
-                                  amount: expense.amount,
-                                  category: expense.category.name,
-                                  date: expense.date,
-                                  onDelete: () async {
-                                    await _deleteExpense(expense, index);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+                    const SizedBox(height: 22),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Dernières dépenses',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.colors.text,
+                          ),
+                        ),
+                        if (_expenses.isNotEmpty)
+                          Text(
+                            '${_expenses.length} éléments',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.colors.textMuted,
+                            ),
+                          ),
+                      ],
                     ),
+                    const SizedBox(height: 12),
+                    if (_expenses.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppTheme.colors.surface,
+                          borderRadius: BorderRadius.circular(AppTheme.radius.lg),
+                          border: Border.all(color: AppTheme.colors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.folder_open_outlined,
+                              size: 40,
+                              color: AppTheme.colors.textMuted,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Aucune dépense enregistrée',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.colors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Ajoutez une nouvelle dépense pour suivre votre budget.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.colors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      AnimatedList(
+                        key: _expenseListKey,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        initialItemCount: _expenses.length,
+                        itemBuilder: (
+                          BuildContext context,
+                          int index,
+                          Animation<double> animation,
+                        ) {
+                          final expense = _expenses[index];
+
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SizeTransition(
+                              sizeFactor: animation,
+                              child: ExpenseCard(
+                                description: expense.description,
+                                amount: expense.amount,
+                                category: expense.category.name,
+                                date: expense.date,
+                                onDelete: () async {
+                                  await _deleteExpense(expense, index);
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
               ),

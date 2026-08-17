@@ -5,36 +5,84 @@ class HomePageHeader extends StatelessWidget {
   final String title;
   final String date;
 
-
   const HomePageHeader({
     required this.title,
     required this.date,
-    super.key
+    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.colors.text,
-          ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radius.xl),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.colors.primary,
+            AppTheme.colors.secondary,
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          date,
-          style: TextStyle(
-            fontSize: 16,
-            color: AppTheme.colors.textMuted,
-            fontWeight: FontWeight.bold
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.colors.shadow.withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
           ),
-        ),
-      ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppTheme.colors.surface.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(AppTheme.radius.md),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: AppTheme.colors.surface,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.colors.surface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.colors.surface.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              date,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.colors.surface,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

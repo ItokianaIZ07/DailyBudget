@@ -13,12 +13,18 @@ void main() async {
       home: MainPage(),
       theme: ThemeData(
         useMaterial3: true,
+        scaffoldBackgroundColor: AppTheme.colors.background,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppTheme.colors.primarySoft,
+          seedColor: AppTheme.colors.primary,
           brightness: Brightness.light,
         ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppTheme.colors.surface,
+          foregroundColor: AppTheme.colors.text,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
-
       themeMode: ThemeMode.light,
     ),
   );

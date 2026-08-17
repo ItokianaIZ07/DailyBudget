@@ -155,9 +155,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Total des dépenses",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AppTheme.colors.textMuted),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -177,7 +177,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           ),
                           decoration: BoxDecoration(
                             color: _previousPercentage > 0
-                                ? Colors.green.shade100
+                                ? AppTheme.colors.successSoft
                                 : AppTheme.colors.dangerSoft,
                             borderRadius: BorderRadius.circular(12),
                           ),

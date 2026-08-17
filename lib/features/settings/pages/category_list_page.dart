@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/features/settings/widgets/category_card.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
@@ -143,8 +144,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
         onPressed: () {
           _openCategoryFormPage(title: "Nouvelle catégorie");
         },
-        backgroundColor: Color.fromRGBO(20, 89, 159, 1),
-        foregroundColor: Color.fromRGBO(255, 255, 255, 1),
+        backgroundColor: AppTheme.colors.primary,
+        foregroundColor: AppTheme.colors.surface,
         child: Icon(Icons.add),
       ),
     );

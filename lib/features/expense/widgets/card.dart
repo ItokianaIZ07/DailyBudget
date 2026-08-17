@@ -116,7 +116,7 @@ class ExpenseCard extends StatelessWidget {
                     await _confirmDelete(context);
                   },
                   icon: const Icon(Icons.delete_outline),
-                  color: Colors.red,
+                  color: AppTheme.colors.danger,
                   tooltip: "Supprimer",
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),

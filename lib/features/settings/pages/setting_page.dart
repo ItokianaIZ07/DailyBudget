@@ -14,11 +14,11 @@ class SettingPage extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.check, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Success'),
+              Icon(Icons.check, color: AppTheme.colors.success),
+              const SizedBox(width: 8),
+              const Text('Success'),
             ],
           ),
           content: Text(message),

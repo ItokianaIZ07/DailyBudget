@@ -268,7 +268,7 @@ class AboutPage extends StatelessWidget {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.colors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppTheme.colors.surface,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
