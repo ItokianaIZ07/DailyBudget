@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/features/home/presentation/home_page.dart';
+import 'package:gestion_depenses/features/expense/presentation/expense_page.dart';
+import 'package:gestion_depenses/features/settings/pages/setting_page.dart';
+import 'package:gestion_depenses/features/history/pages/history_page.dart';
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/features/statistic/presentation/statistic_page.dart';
+import 'package:gestion_depenses/services/expense_service.dart';
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+  @override
+  State<StatefulWidget> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int _currentIndex = 0;
+  int _selectedYear = DatetimeUtil.getNowYear();
+  final List<int> _years = [];
+
+  Future<void> _loadTransactionYears() async {
+    try {
+      final years = await ExpenseService.getListYearTransaction();
+      setState(() {
+        _years.clear();
+        _years.addAll(years);
+        _years.insert(0, -1);
+        int currentYear = DatetimeUtil.getNowYear();
+        if (!_years.contains(_selectedYear)) {
+          if (_years.contains(currentYear)) {
+            _selectedYear = currentYear;
+          } else {
+            _selectedYear = _years.first;
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint("Erreur lors de l'initialisation des années :$e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactionYears();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      HomePage(),
+      ExpensePage(),
+      HistoryPage(selectedYear: _selectedYear),
+      StatisticsPage(),
+      SettingPage(),
+    ];
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'SpendWise',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.colors.primary.withValues(alpha: 0.75),
+          ),
+        ),
+        actions: [
+          if (_currentIndex == 2)
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.colors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: _years.contains(_selectedYear)
+                          ? _selectedYear
+                          : (_years.isNotEmpty ? _years.first : null),
+                      isDense: true,
+                      icon: const Icon(Icons.arrow_drop_down),
+                      items: _years.map((int year) {
+                        return DropdownMenuItem<int>(
+                          value: year,
+                          child: year > 0 ? Text('$year') : Text("Toutes"),
+                        );
+                      }).toList(),
+                      onChanged: (int? newYear) {
+                        if (newYear != null) {
+                          setState(() => _selectedYear = newYear);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: pages[_currentIndex],
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return NavigationBar(
+      selectedIndex: _currentIndex,
+      elevation: 3,
+      height: 65,
+      indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      onDestinationSelected: (int index) {
+        setState(() {
+          _currentIndex = index;
+        });
+        if (index == 2) {
+          _loadTransactionYears();
+        }
+      },
+      destinations: [
+        NavigationDestination(
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home, color: AppTheme.colors.secondary),
+          label: "Accueil",
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.payments_outlined),
+          selectedIcon: Icon(Icons.payments, color: AppTheme.colors.secondary),
+          label: "Dépenses",
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.history_outlined),
+          selectedIcon: Icon(Icons.history, color: AppTheme.colors.secondary),
+          label: "Historique",
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart, color: AppTheme.colors.secondary),
+          label: "Statistique",
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings, color: AppTheme.colors.secondary),
+          label: "Paramètres",
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}

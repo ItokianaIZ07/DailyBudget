@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'core/database/database_service.dart';
+import 'package:gestion_depenses/features/navigation/presentation/main_page.dart';
 
-void main(){
-  runApp( const MaterialApp(
-    home: HomePage()
-  ));
-}
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class HomePage extends StatelessWidget{
-  const HomePage({super.key});
+  await DatabaseService.instance.initialize();
 
-  @override
-  Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Budget Manager"), elevation: 12,
-        actions: [Icon(Icon.add)],
+  runApp(
+    MaterialApp(
+      home: MainPage(),
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: AppTheme.colors.background,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppTheme.colors.primary,
+          brightness: Brightness.light,
         ),
-      body: const Center(child: Text("Test"),),
-    );
-  }
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppTheme.colors.surface,
+          foregroundColor: AppTheme.colors.text,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
+      ),
+      themeMode: ThemeMode.light,
+    ),
+  );
 }
