@@ -1,6 +1,7 @@
 import 'package:gestion_depenses/models/category_limit.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense_category.dart';
+import 'package:gestion_depenses/models/month.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:gestion_depenses/core/database/database_service.dart';
 import 'package:gestion_depenses/core/database/tables/expense_table.dart';
@@ -368,8 +369,8 @@ class ExpenseRepository {
   }
 
   static Future<Map<int, double>> getMonthlyDailyExpense(
-    String month, 
-    String year, 
+    String month,
+    String year,
   ) async {
     int monthInt = int.parse(month);
     int yearInt = int.parse(year);
@@ -404,9 +405,7 @@ class ExpenseRepository {
     return monthlyData;
   }
 
-  static Future<Map<int, double>> getYearlyMonthlyExpense(
-    String year, 
-  ) async {
+  static Future<Map<int, double>> getYearlyMonthlyExpense(String year) async {
     Map<int, double> yearlyData = {
       for (int month = 1; month <= 12; month++) month: 0.0,
     };
@@ -434,8 +433,58 @@ class ExpenseRepository {
     return yearlyData;
   }
 
-  static Future<void> deleteAllExpenses()async{
+  static Future<void> deleteAllExpenses() async {
     await _database.delete(_tableName);
+  }
+
+  static Future<List<Month>> getListMonths(String year) async {
+    String sql ="""
+    SELECT DISTINCT
+        strftime('%m', date) AS numero_mois,
+        CASE strftime('%m', date)
+            WHEN '01' THEN 'Janvier'
+            WHEN '02' THEN 'Février'
+            WHEN '03' THEN 'Mars'
+            WHEN '04' THEN 'Avril'
+            WHEN '05' THEN 'Mai'
+            WHEN '06' THEN 'Juin'
+            WHEN '07' THEN 'Juillet'
+            WHEN '08' THEN 'Août'
+            WHEN '09' THEN 'Septembre'
+            WHEN '10' THEN 'Octobre'
+            WHEN '11' THEN 'Novembre'
+            WHEN '12' THEN 'Décembre'
+        END AS mois
+    FROM $_tableName
+    WHERE strftime('%Y', date) = ?
+    ORDER BY numero_mois ASC
+    """;
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [year]);
+
+    return results.map((item){
+      // return Month(
+      //   "label": item["mois"].toString(),
+      //   "value": item["numero_mois"].toString()
+      // );
+      return Month(
+        label: item["mois"].toString(),
+        value: item["numero_mois"].toString()
+      );
+    }).toList();
+  }
+
+  static Future<List<Expense>?> getExpenseByMonthAndYear(Category category, String month, String year)async{
+    final List<Map<String, dynamic>> results = await _database.query(
+      _tableName,
+      where: "strftime('%m', date) = ? AND strftime('%m', date)",
+      whereArgs: [month, year]
+    );
+    if(results.isEmpty){
+      return null;
+    }
+    return results.map((expense){
+      return Expense.fromMap(expense, category: category);
+    }).toList();
   }
 
   //   static Future<void> testDebugDates() async {
