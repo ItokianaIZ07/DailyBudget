@@ -250,63 +250,69 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  TotalWidget(
-                    totalExpense: _totalExpense,
-                    selectedMonth: _selectedMonth,
-                    selectedYear: widget.selectedYear,
-                  ),
-                  const SizedBox(height: 16),
-                  _expenses.isEmpty
-                      ? Center(
-                          child: Text(
-                            "Aucune dépense trouvée pour cette catégorie",
-                            style: TextStyle(
-                              color: AppTheme.colors.textMuted,
-                              fontStyle: FontStyle.italic,
-                            ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          TotalWidget(
+                            totalExpense: _totalExpense,
+                            selectedMonth: _selectedMonth,
+                            selectedYear: widget.selectedYear,
                           ),
-                        )
-                      : Expanded(
-                          child: AnimatedList(
-                            key: ValueKey(
-                              "${widget.selectedYear}_${_selectedCategory?.id}_${_expenses.length}",
-                            ),
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            initialItemCount: _expenses.length,
-                            padding: EdgeInsets.only(
-                              top: 0,
-                              bottom: 0,
-                              left: 8,
-                              right: 8,
-                            ),
-                            itemBuilder:
-                                (
-                                  BuildContext context,
-                                  int index,
-                                  Animation<double> animation,
-                                ) {
-                                  final expense = _expenses[index];
-
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SizeTransition(
-                                      sizeFactor: animation,
-                                      child: ExpenseCard(
-                                        description: expense.description,
-                                        amount: expense.amount,
-                                        category: expense.category.name,
-                                        date: expense.date,
-                                        onDelete: () async {
-                                          await _deleteExpense(expense, index);
-                                          await _refreshScreen();
-                                        },
-                                      ),
+                          const SizedBox(height: 16),
+                          _expenses.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    "Aucune dépense trouvée pour cette catégorie",
+                                    style: TextStyle(
+                                      color: AppTheme.colors.textMuted,
+                                      fontStyle: FontStyle.italic,
                                     ),
-                                  );
-                                },
-                          ),
-                        ),
+                                  ),
+                                )
+                              : AnimatedList(
+                                  key: ValueKey(
+                                    "${widget.selectedYear}_${_selectedCategory?.id}_${_expenses.length}",
+                                  ),
+                                  shrinkWrap: true,
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  initialItemCount: _expenses.length,
+                                  padding: const EdgeInsets.only(
+                                    top: 0,
+                                    bottom: 0,
+                                    left: 8,
+                                    right: 8,
+                                  ),
+                                  itemBuilder: (
+                                    BuildContext context,
+                                    int index,
+                                    Animation<double> animation,
+                                  ) {
+                                    final expense = _expenses[index];
+
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SizeTransition(
+                                        sizeFactor: animation,
+                                        child: ExpenseCard(
+                                          description: expense.description,
+                                          amount: expense.amount,
+                                          category: expense.category.name,
+                                          date: expense.date,
+                                          onDelete: () async {
+                                            await _deleteExpense(expense, index);
+                                            await _refreshScreen();
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
       ),
