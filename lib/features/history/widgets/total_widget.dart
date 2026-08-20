@@ -32,8 +32,8 @@ class TotalWidget extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 70,
-            height: 70,
+            width: 48,
+            height: 48,
             decoration: const BoxDecoration(
               color: Color(0xFFE0F2E5),
               shape: BoxShape.circle,
@@ -77,8 +77,8 @@ class TotalWidget extends StatelessWidget {
             ),
           ),
           Container(
-            width: 52,
-            height: 52,
+            width: 48,
+            height: 48,
             decoration: const BoxDecoration(
               color: Color(0xFFE0F2E5),
               shape: BoxShape.circle,
