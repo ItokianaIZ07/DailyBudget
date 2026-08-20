@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/models/month.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
+import 'package:gestion_depenses/services/history_service.dart';
 
 class HistoryPage extends StatefulWidget {
   int selectedYear;
-  
-  HistoryPage({
-    required this.selectedYear,
-    super.key
-  });
+
+  HistoryPage({required this.selectedYear, super.key});
 
   @override
   State<HistoryPage> createState() => _HistoryPageState();
@@ -21,11 +21,15 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   // final List<String> _years = ["2026", "2025", "2024", "2023"];
   // String _selectedValue = "";
+  final formatAr = CurrencyUtil.getFormater();
   final List<Expense> _expenses = [];
   Category? _selectedCategory;
   bool _isLoading = false;
   final GlobalKey<AnimatedListState> _expenseListKey =
       GlobalKey<AnimatedListState>();
+  Month? _selectedMonth;
+  final List<Month> _months = [];
+  double _totalExpense = 0;
 
   Future<void> _loadExpenses() async {
     setState(() {
@@ -33,7 +37,11 @@ class _HistoryPageState extends State<HistoryPage> {
     });
 
     try {
-      final expenses = await ExpenseService.getByCategory(_selectedCategory, widget.selectedYear);
+      final expenses = await ExpenseService.getByCategory(
+        _selectedCategory,
+        widget.selectedYear,
+        _selectedMonth?.value
+      );
 
       setState(() {
         _expenses.clear();
@@ -80,27 +88,81 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
-  Future<void> _loadExpensesByKeyword(String keyword) async{
-    if(keyword.isEmpty){
+  Future<void> _loadExpensesByKeyword(String keyword) async {
+    if (keyword.isEmpty) {
       await _loadExpenses();
       return;
     }
-    try{
-      final expenses = await ExpenseService.searchByKeyWord(keyword, widget.selectedYear);
+    try {
+      final expenses = await ExpenseService.searchByKeyWord(
+        keyword,
+        widget.selectedYear,
+      );
       setState(() {
         _expenses.clear();
         _expenses.addAll(expenses);
       });
-    }catch(e){
-      debugPrint("Une erreur est survenue lors de la recherche des dépenses $e");
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors de la recherche des dépenses $e",
+      );
     }
+  }
 
+  Future<void> _loadMonths() async {
+    final allFilter = Month(value: null, label: "Toutes");
+
+    try {
+      final months = await HistoryService.getAllMonths();
+      final selectedMonthValue = _selectedMonth?.value;
+
+      setState(() {
+        _months.clear();
+        _months.add(allFilter);
+        _months.addAll(months);
+
+        _selectedMonth = _months.firstWhere(
+          (month) => month.value == selectedMonthValue,
+          orElse: () => allFilter,
+        );
+      });
+    } catch (e) {
+      debugPrint("Une erreur est survenue lors du chargement des mois : $e");
+    }
+  }
+
+  Future<void> _loadTotalExpense() async {
+    if (widget.selectedYear < 0) {
+      setState(() {
+        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
+      });
+      return;
+    }
+    try {
+      final total = await HistoryService.getExpenseByPeriod(
+        _selectedMonth?.value,
+        widget.selectedYear,
+      );
+      setState(() {
+        _totalExpense = total;
+      });
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors du chargement de la total des dépénses: $e",
+      );
+    }
+  }
+
+  Future<void> _refreshScreen() async {
+    await _loadExpenses();
+    await _loadMonths();
+    await _loadTotalExpense();
   }
 
   @override
   void initState() {
     super.initState();
-    _loadExpenses();
+    _refreshScreen();
     // _selectedValue = "2026";
   }
 
@@ -108,7 +170,7 @@ class _HistoryPageState extends State<HistoryPage> {
   void didUpdateWidget(covariant HistoryPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.selectedYear != widget.selectedYear) {
-      _loadExpenses();
+      _refreshScreen();
       debugPrint("${_expenses.length}");
     }
   }
@@ -135,10 +197,10 @@ class _HistoryPageState extends State<HistoryPage> {
                       onCategorySelected: (category) {
                         setState(() {
                           _selectedCategory = category;
-                          _loadExpenses();
+                          _refreshScreen();
                         });
                       },
-                      onSearch: (keyword){
+                      onSearch: (keyword) {
                         setState(() {
                           _selectedCategory = null;
                           _loadExpensesByKeyword(keyword);
@@ -146,6 +208,136 @@ class _HistoryPageState extends State<HistoryPage> {
                       },
                     ),
                   ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+                      border: Border.all(color: Colors.blue.shade100),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButtonFormField<Month>(
+                        isExpanded: true,
+                        initialValue: _selectedMonth,
+                        icon: const Icon(Icons.keyboard_arrow_down),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                        ),
+                        items: _months.map<DropdownMenuItem<Month>>((month) {
+                          return DropdownMenuItem<Month>(
+                            value: month,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_month),
+                                const SizedBox(width: 16),
+                                Text(
+                                  month.label,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) async{
+                          setState(() {
+                            _selectedMonth = value;
+                          });
+                          await _loadExpenses();
+                          await _loadTotalExpense();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    margin: EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3FAF5),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: const Color(0xFFD5EBDD),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Icône
+                        Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE0F2E5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_wallet_outlined,
+                            size: 36,
+                            color: Color(0xFF159447),
+                          ),
+                        ),
+
+                        const SizedBox(width: 20),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Total des dépenses',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  color: Color(0xFF536174),
+                                ),
+                              ),
+
+                              const SizedBox(height: 4),
+
+                              Text(
+                                formatAr.format(_totalExpense),
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF172033),
+                                ),
+                              ),
+
+                              const SizedBox(height: 2),
+
+                              Text(
+                                '${_selectedMonth?.value == null ? "" : _selectedMonth?.label} ${widget.selectedYear < 0 ? "Toutes les années" : widget.selectedYear}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF159447),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE0F2E5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.trending_up,
+                            size: 28,
+                            color: Color(0xFF159447),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   _expenses.isEmpty
                       ? Center(
                           child: Text(
@@ -158,11 +350,18 @@ class _HistoryPageState extends State<HistoryPage> {
                         )
                       : Expanded(
                           child: AnimatedList(
-                            key: ValueKey("${widget.selectedYear}_${_selectedCategory?.id}_${_expenses.length}"),
+                            key: ValueKey(
+                              "${widget.selectedYear}_${_selectedCategory?.id}_${_expenses.length}",
+                            ),
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             initialItemCount: _expenses.length,
-                            padding: EdgeInsets.only(top: 0, bottom: 0, left: 8, right: 8),
+                            padding: EdgeInsets.only(
+                              top: 0,
+                              bottom: 0,
+                              left: 8,
+                              right: 8,
+                            ),
                             itemBuilder:
                                 (
                                   BuildContext context,
@@ -182,6 +381,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                         date: expense.date,
                                         onDelete: () async {
                                           await _deleteExpense(expense, index);
+                                          await _refreshScreen();
                                         },
                                       ),
                                     ),

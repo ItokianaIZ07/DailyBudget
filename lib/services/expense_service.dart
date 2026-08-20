@@ -37,9 +37,15 @@ class ExpenseService {
   static Future<OperationResult> insertExpense(Expense expense) async {
     try {
       await ExpenseRepository.createExpense(expense);
-      return OperationResult(success: true, message: 'Dépense enregistrée avec succès');
+      return OperationResult(
+        success: true,
+        message: 'Dépense enregistrée avec succès',
+      );
     } catch (e) {
-      return OperationResult(success: false, message: 'Impossible d’enregistrer la dépense');
+      return OperationResult(
+        success: false,
+        message: 'Impossible d’enregistrer la dépense',
+      );
     }
   }
 
@@ -60,52 +66,72 @@ class ExpenseService {
     return category != null;
   }
 
-  static Future<List<Expense>> getAllExpenses()async {
+  static Future<List<Expense>> getAllExpenses() async {
     return await ExpenseRepository.getAllExpenses();
   }
 
-  static double sumExpenseAmount(List<Expense> expenses){
+  static double sumExpenseAmount(List<Expense> expenses) {
     double sum = 0;
-    for(var expense in expenses){
+    for (var expense in expenses) {
       sum += expense.amount;
     }
     return sum;
   }
 
-  static Future<int> deleteExpense(Expense expense) async{
+  static Future<int> deleteExpense(Expense expense) async {
     return await ExpenseRepository.deleteExpense(expense);
   }
 
-  static Future<List<Expense>> getByCategory(Category? category, int year) async{
-    if(year < 0 && category == null){
-      return await ExpenseRepository.getAllExpenses();
-    }
-    if(year < 0 && category != null){
-      return await ExpenseRepository.getExpensesByCategory(category);
-    }
-    if(category == null){
-      return await ExpenseRepository.getByYear(year);
+  static Future<List<Expense>> getByCategory(
+    Category? category,
+    int year,
+    String? month,
+  ) async {
+    final List<Expense> expenses;
+
+    if (category == null) {
+      expenses = year < 0
+          ? await ExpenseRepository.getAllExpenses()
+          : await ExpenseRepository.getByYear(year);
+    } else {
+      expenses = year < 0
+          ? await ExpenseRepository.getExpensesByCategory(category)
+          : await ExpenseRepository.getExpensesByCategoryAndYear(
+              category,
+              year,
+            );
     }
 
-    return await ExpenseRepository.getExpensesByCategoryAndYear(category, year);
+    if (month == null) {
+      return expenses;
+    }
+
+    final monthNumber = int.tryParse(month);
+    if (monthNumber == null) {
+      return [];
+    }
+
+    return expenses
+        .where((expense) => expense.date.month == monthNumber)
+        .toList();
   }
-  
-  static Future<List<Expense>> searchByKeyWord(String keyword, int year) async{
-    if(year < 0){
+
+  static Future<List<Expense>> searchByKeyWord(String keyword, int year) async {
+    if (year < 0) {
       return await ExpenseRepository.getByKeyword(keyword);
     }
     return await ExpenseRepository.getByKeywordAndYear(keyword, year);
   }
 
-  static Future<List<Expense>> getByTransactionYear(int year) async{
+  static Future<List<Expense>> getByTransactionYear(int year) async {
     return await ExpenseRepository.getByYear(year);
   }
 
-  static Future<List<int>> getListYearTransaction() async{
+  static Future<List<int>> getListYearTransaction() async {
     return await ExpenseRepository.getListYear();
   }
 
-  static Future<void> deleteAllExpenses() async{
+  static Future<void> deleteAllExpenses() async {
     await ExpenseRepository.deleteAllExpenses();
   }
 }
