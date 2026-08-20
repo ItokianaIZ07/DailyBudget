@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
-import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
+import 'package:gestion_depenses/features/history/widgets/total_widget.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/month.dart';
@@ -21,7 +21,6 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   // final List<String> _years = ["2026", "2025", "2024", "2023"];
   // String _selectedValue = "";
-  final formatAr = CurrencyUtil.getFormater();
   final List<Expense> _expenses = [];
   Category? _selectedCategory;
   bool _isLoading = false;
@@ -251,91 +250,10 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.symmetric(horizontal: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3FAF5),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: const Color(0xFFD5EBDD),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Icône
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0F2E5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.account_balance_wallet_outlined,
-                            size: 36,
-                            color: Color(0xFF159447),
-                          ),
-                        ),
-
-                        const SizedBox(width: 20),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Total des dépenses',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  color: Color(0xFF536174),
-                                ),
-                              ),
-
-                              const SizedBox(height: 4),
-
-                              Text(
-                                formatAr.format(_totalExpense),
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF172033),
-                                ),
-                              ),
-
-                              const SizedBox(height: 2),
-
-                              Text(
-                                '${_selectedMonth?.value == null ? "" : _selectedMonth?.label} ${widget.selectedYear < 0 ? "Toutes les années" : widget.selectedYear}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF159447),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0F2E5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.trending_up,
-                            size: 28,
-                            color: Color(0xFF159447),
-                          ),
-                        ),
-                      ],
-                    ),
+                  TotalWidget(
+                    totalExpense: _totalExpense,
+                    selectedMonth: _selectedMonth,
+                    selectedYear: widget.selectedYear,
                   ),
                   const SizedBox(height: 16),
                   _expenses.isEmpty
