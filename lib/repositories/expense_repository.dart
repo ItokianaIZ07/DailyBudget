@@ -86,6 +86,7 @@ class ExpenseRepository {
       _tableName,
       where: "category_id = ?",
       whereArgs: [category.id],
+      orderBy: "date DESC"
     );
 
     return results
@@ -103,6 +104,7 @@ class ExpenseRepository {
       _tableName,
       where: "category_id = ? AND strftime('%Y', date) = ?",
       whereArgs: [category.id, year.toString()],
+      orderBy: 'date DESC'
     );
 
     return results
@@ -477,7 +479,8 @@ class ExpenseRepository {
     final List<Map<String, dynamic>> results = await _database.query(
       _tableName,
       where: "strftime('%m', date) = ? AND strftime('%m', date)",
-      whereArgs: [month, year]
+      whereArgs: [month, year],
+      orderBy: "date DESC"
     );
     if(results.isEmpty){
       return null;
