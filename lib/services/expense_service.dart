@@ -134,4 +134,8 @@ class ExpenseService {
   static Future<void> deleteAllExpenses() async {
     await ExpenseRepository.deleteAllExpenses();
   }
+
+  static Future<void> updateExpense(Expense expense) async{
+    await ExpenseRepository.updateExpense(expense);
+  }
 }

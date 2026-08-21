@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/features/home/widgets/edit_modal.dart';
 import 'package:gestion_depenses/features/home/widgets/home_page_header.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/home/widgets/stat_card.dart';
+import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,6 +28,22 @@ class _HomePageState extends State<HomePage> {
 
   final GlobalKey<AnimatedListState> _expenseListKey =
       GlobalKey<AnimatedListState>();
+
+  final List<Category> _categories = [];
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await CategoryService.getAllCategories();
+      setState(() {
+        _categories.clear();
+        _categories.addAll(categories);
+      });
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors du chargement des catégories: $e",
+      );
+    }
+  }
 
   Future<void> _loadExpenses() async {
     setState(() {
@@ -62,13 +81,7 @@ class _HomePageState extends State<HomePage> {
           opacity: animation,
           child: SizeTransition(
             sizeFactor: animation,
-            child: ExpenseCard(
-              description: removedExpense.description,
-              amount: removedExpense.amount,
-              category: removedExpense.category.name,
-              date: removedExpense.date,
-              onDelete: () {},
-            ),
+            child: ExpenseCard(expense: removedExpense, onDelete: () {}),
           ),
         );
       }, duration: const Duration(milliseconds: 300));
@@ -87,12 +100,27 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showEditModal(BuildContext context, Expense expense) async {
+    final bool? modified = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return EditModal(categories: _categories, expense: expense);
+      },
+    );
+
+    if (modified == true) {
+      await _loadExpenses();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
     _initDate();
     _loadExpenses();
+    _loadCategories();
   }
 
   @override
@@ -182,7 +210,9 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: AppTheme.colors.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radius.lg),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius.lg,
+                          ),
                           border: Border.all(color: AppTheme.colors.border),
                         ),
                         child: Column(
@@ -219,29 +249,31 @@ class _HomePageState extends State<HomePage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         initialItemCount: _expenses.length,
-                        itemBuilder: (
-                          BuildContext context,
-                          int index,
-                          Animation<double> animation,
-                        ) {
-                          final expense = _expenses[index];
+                        itemBuilder:
+                            (
+                              BuildContext context,
+                              int index,
+                              Animation<double> animation,
+                            ) {
+                              final expense = _expenses[index];
 
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SizeTransition(
-                              sizeFactor: animation,
-                              child: ExpenseCard(
-                                description: expense.description,
-                                amount: expense.amount,
-                                category: expense.category.name,
-                                date: expense.date,
-                                onDelete: () async {
-                                  await _deleteExpense(expense, index);
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SizeTransition(
+                                  sizeFactor: animation,
+                                  child: ExpenseCard(
+                                    expense: expense,
+                                    onDelete: () async {
+                                      await _deleteExpense(expense, index);
+                                    },
+                                    onEdit: () async {
+                                      await _showEditModal(context, expense);
+                                      await _loadExpenses();
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                       ),
                   ],
                 ),
