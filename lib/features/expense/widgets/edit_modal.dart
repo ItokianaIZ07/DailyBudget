@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
@@ -97,6 +98,12 @@ class _EditModalState extends State<EditModal> {
 
       // true = modification effectuée
       Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Dépense modifiée avec succès'),
+          backgroundColor: AppTheme.colors.success
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
 
@@ -105,7 +112,10 @@ class _EditModalState extends State<EditModal> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de modifier la dépense')),
+        SnackBar(
+          content: Text('Impossible de modifier la dépense'),
+          backgroundColor: AppTheme.colors.danger
+        ),
       );
     }
   }
