@@ -1,37 +1,41 @@
 import 'package:flutter/material.dart';
+
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/total_widget.dart';
 import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
+
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/month.dart';
+
 import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 import 'package:gestion_depenses/services/history_service.dart';
 
 class HistoryPage extends StatefulWidget {
-  int selectedYear;
+  final int selectedYear;
 
-  HistoryPage({required this.selectedYear, super.key});
+  const HistoryPage({required this.selectedYear, super.key});
 
   @override
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  // final List<String> _years = ["2026", "2025", "2024", "2023"];
-  // String _selectedValue = "";
+
   final List<Expense> _expenses = [];
-  Category? _selectedCategory;
-  bool _isLoading = false;
-  final GlobalKey<AnimatedListState> _expenseListKey =
-      GlobalKey<AnimatedListState>();
-  Month? _selectedMonth;
   final List<Month> _months = [];
-  double _totalExpense = 0;
   final List<Category> _categories = [];
+
+  Category? _selectedCategory;
+  Month? _selectedMonth;
+
+  double _totalExpense = 0;
+
+  bool _isLoading = false;
 
   Future<void> _loadExpenses() async {
     setState(() {
@@ -42,69 +46,78 @@ class _HistoryPageState extends State<HistoryPage> {
       final expenses = await ExpenseService.getByCategory(
         _selectedCategory,
         widget.selectedYear,
-        _selectedMonth?.value
+        _selectedMonth?.value,
       );
 
+      if (!mounted) return;
+
       setState(() {
-        _expenses.clear();
-        _expenses.addAll(expenses);
+        _expenses
+          ..clear()
+          ..addAll(expenses);
+
+        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
     } catch (e) {
       debugPrint('Erreur chargement des dépenses : $e');
     } finally {
+      // ignore: control_flow_in_finally
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _deleteExpense(Expense expense, int index) async {
+  Future<void> _loadExpensesByKeyword(String keyword) async {
     try {
-      await ExpenseService.deleteExpense(expense);
+      final search = keyword.trim();
 
-      if (index >= _expenses.length) {
+      if (search.isEmpty) {
+        await _loadExpenses();
         return;
       }
 
-      final removedExpense = _expenses.removeAt(index);
+      int? month;
 
-      _expenseListKey.currentState?.removeItem(index, (context, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SizeTransition(
-            sizeFactor: animation,
-            child: ExpenseCard(
-              expense: removedExpense,
-              onDelete: () {},
-            ),
-          ),
-        );
-      }, duration: const Duration(milliseconds: 300));
+      if (_selectedMonth?.value != null) {
+        month = int.parse(_selectedMonth!.value!);
+      }
 
-      setState(() {});
+      final expenses = await ExpenseService.searchByKeyWord(
+        search,
+        widget.selectedYear,
+        month: month,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _expenses
+          ..clear()
+          ..addAll(expenses);
+
+        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
+      });
     } catch (e) {
-      debugPrint('Erreur suppression dépense : $e');
+      debugPrint('Une erreur est survenue lors de la recherche : $e');
     }
   }
 
-  Future<void> _loadExpensesByKeyword(String keyword) async {
-    if (keyword.isEmpty) {
-      await _loadExpenses();
-      return;
-    }
+  Future<void> _deleteExpense(Expense expense) async {
     try {
-      final expenses = await ExpenseService.searchByKeyWord(
-        keyword,
-        widget.selectedYear,
-      );
+      await ExpenseService.deleteExpense(expense);
+
+      if (!mounted) return;
+
       setState(() {
-        _expenses.clear();
-        _expenses.addAll(expenses);
+        _expenses.removeWhere((item) => item.id == expense.id);
+
+        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
     } catch (e) {
-      debugPrint(
-        "Une erreur est survenue lors de la recherche des dépenses $e",
-      );
+      debugPrint('Erreur suppression dépense : $e');
     }
   }
 
@@ -113,12 +126,16 @@ class _HistoryPageState extends State<HistoryPage> {
 
     try {
       final months = await HistoryService.getAllMonths();
+
       final selectedMonthValue = _selectedMonth?.value;
 
+      if (!mounted) return;
+
       setState(() {
-        _months.clear();
-        _months.add(allFilter);
-        _months.addAll(months);
+        _months
+          ..clear()
+          ..add(allFilter)
+          ..addAll(months);
 
         _selectedMonth = _months.firstWhere(
           (month) => month.value == selectedMonthValue,
@@ -126,50 +143,31 @@ class _HistoryPageState extends State<HistoryPage> {
         );
       });
     } catch (e) {
-      debugPrint("Une erreur est survenue lors du chargement des mois : $e");
+      debugPrint('Une erreur est survenue lors du chargement des mois : $e');
     }
   }
 
-  Future<void> _loadTotalExpense() async {
-    if (widget.selectedYear < 0) {
-      setState(() {
-        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
-      });
-      return;
-    }
+  Future<void> _loadCategories() async {
     try {
-      final total = await HistoryService.getExpenseByPeriod(
-        _selectedMonth?.value,
-        widget.selectedYear,
-      );
+      final categories = await CategoryService.getAllCategories();
+
+      if (!mounted) return;
+
       setState(() {
-        _totalExpense = total;
+        _categories
+          ..clear()
+          ..addAll(categories);
       });
     } catch (e) {
       debugPrint(
-        "Une erreur est survenue lors du chargement de la total des dépénses: $e",
+        'Une erreur est survenue lors du chargement des catégories : $e',
       );
     }
   }
 
   Future<void> _refreshScreen() async {
-    await _loadExpenses();
     await _loadMonths();
-    await _loadTotalExpense();
-  }
-
-    Future<void> _loadCategories() async {
-    try {
-      final categories = await CategoryService.getAllCategories();
-      setState(() {
-        _categories.clear();
-        _categories.addAll(categories);
-      });
-    } catch (e) {
-      debugPrint(
-        "Une erreur est survenue lors du chargement des catégories: $e",
-      );
-    }
+    await _loadExpenses();
   }
 
   Future<void> _showEditModal(BuildContext context, Expense expense) async {
@@ -189,17 +187,18 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   void initState() {
     super.initState();
+
     _refreshScreen();
     _loadCategories();
-    // _selectedValue = "2026";
   }
 
+  // Appelé lorsque le filtre année change
   @override
   void didUpdateWidget(covariant HistoryPage oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (oldWidget.selectedYear != widget.selectedYear) {
       _refreshScreen();
-      debugPrint("${_expenses.length}");
     }
   }
 
@@ -207,6 +206,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.colors.background,
+
       body: SafeArea(
         child: _isLoading
             ? Center(
@@ -219,47 +219,64 @@ class _HistoryPageState extends State<HistoryPage> {
                   Container(
                     height: 128,
                     padding: const EdgeInsets.all(8),
+
                     child: SortWidget(
                       selectedCategory: _selectedCategory,
                       selectedYear: widget.selectedYear,
-                      onCategorySelected: (category) {
+
+                      onCategorySelected: (category) async {
                         setState(() {
                           _selectedCategory = category;
-                          _refreshScreen();
                         });
+
+                        await _loadExpenses();
                       },
-                      onSearch: (keyword) {
+
+                      onSearch: (keyword) async {
                         setState(() {
                           _selectedCategory = null;
-                          _loadExpensesByKeyword(keyword);
                         });
+                        await _loadExpensesByKeyword(keyword);
                       },
                     ),
                   ),
+
+                  // FILTRE MOIS
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 8),
+
                     padding: const EdgeInsets.symmetric(horizontal: 16),
+
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+
                       border: Border.all(color: Colors.blue.shade100),
                     ),
+
                     child: DropdownButtonHideUnderline(
                       child: DropdownButtonFormField<Month>(
                         isExpanded: true,
+
                         initialValue: _selectedMonth,
+
                         icon: const Icon(Icons.keyboard_arrow_down),
+
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                         ),
+
                         items: _months.map<DropdownMenuItem<Month>>((month) {
                           return DropdownMenuItem<Month>(
                             value: month,
+
                             child: Row(
                               children: [
                                 const Icon(Icons.calendar_month),
+
                                 const SizedBox(width: 16),
+
                                 Text(
                                   month.label,
                                   style: const TextStyle(fontSize: 16),
@@ -268,17 +285,20 @@ class _HistoryPageState extends State<HistoryPage> {
                             ),
                           );
                         }).toList(),
-                        onChanged: (value) async{
+
+                        onChanged: (value) async {
                           setState(() {
                             _selectedMonth = value;
                           });
+
                           await _loadExpenses();
-                          await _loadTotalExpense();
                         },
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
+
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -288,56 +308,52 @@ class _HistoryPageState extends State<HistoryPage> {
                             selectedMonth: _selectedMonth,
                             selectedYear: widget.selectedYear,
                           ),
-                          const SizedBox(height: 16),
-                          _expenses.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    "Aucune dépense trouvée pour cette catégorie",
-                                    style: TextStyle(
-                                      color: AppTheme.colors.textMuted,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                )
-                              : AnimatedList(
-                                  key: ValueKey(
-                                    "${widget.selectedYear}_${_selectedCategory?.id}_${_expenses.length}",
-                                  ),
-                                  shrinkWrap: true,
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
-                                  initialItemCount: _expenses.length,
-                                  padding: const EdgeInsets.only(
-                                    top: 0,
-                                    bottom: 0,
-                                    left: 8,
-                                    right: 8,
-                                  ),
-                                  itemBuilder: (
-                                    BuildContext context,
-                                    int index,
-                                    Animation<double> animation,
-                                  ) {
-                                    final expense = _expenses[index];
 
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SizeTransition(
-                                        sizeFactor: animation,
-                                        child: ExpenseCard(
-                                          expense: expense,
-                                          onDelete: () async {
-                                            await _deleteExpense(expense, index);
-                                            await _refreshScreen();
-                                          },
-                                          onEdit: () async {
-                                            await _showEditModal(context, expense);
-                                          },
-                                        ),
-                                      ),
-                                    );
-                                  },
+                          const SizedBox(height: 16),
+
+                          if (_expenses.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+
+                              child: Text(
+                                "Aucune dépense trouvée pour ces critères",
+
+                                textAlign: TextAlign.center,
+
+                                style: TextStyle(
+                                  color: AppTheme.colors.textMuted,
+                                  fontStyle: FontStyle.italic,
                                 ),
+                              ),
+                            )
+                          else
+                            ListView.builder(
+                              shrinkWrap: true,
+
+                              physics: const NeverScrollableScrollPhysics(),
+
+                              itemCount: _expenses.length,
+
+                              padding: const EdgeInsets.only(
+                                bottom: 8,
+                                left: 8,
+                                right: 8,
+                              ),
+
+                              itemBuilder: (context, index) {
+                                final expense = _expenses[index];
+
+                                return ExpenseCard(
+                                  expense: expense,
+                                  onDelete: () async {
+                                    await _deleteExpense(expense);
+                                  },
+                                  onEdit: () async {
+                                    await _showEditModal(context, expense);
+                                  },
+                                );
+                              },
+                            ),
                         ],
                       ),
                     ),

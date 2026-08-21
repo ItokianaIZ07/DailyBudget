@@ -86,7 +86,7 @@ class ExpenseRepository {
       _tableName,
       where: "category_id = ?",
       whereArgs: [category.id],
-      orderBy: "date DESC"
+      orderBy: "date DESC",
     );
 
     return results
@@ -104,7 +104,7 @@ class ExpenseRepository {
       _tableName,
       where: "category_id = ? AND strftime('%Y', date) = ?",
       whereArgs: [category.id, year.toString()],
-      orderBy: 'date DESC'
+      orderBy: 'date DESC',
     );
 
     return results
@@ -112,61 +112,122 @@ class ExpenseRepository {
         .toList();
   }
 
-  static Future<List<Expense>> getByKeyword(String keyword) async {
-    String sql =
-        "SELECT c.id as category_id, c.name, c.color, e.id, e.description, e.date, e.amount FROM expenses e JOIN category c ON c.id = e.category_id WHERE description LIKE ? COLLATE NOCASE ORDER BY date DESC"; // COLLATE NOCASE pour ingorer les majuscules et minuscules
+  static Future<List<Expense>> getByKeyword(
+    String keyword, {
+    int? month,
+  }) async {
+    String sql = """
+      SELECT
+        c.id AS category_id,
+        c.name,
+        c.color,
+        e.id,
+        e.description,
+        e.date,
+        e.amount
 
-    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
-      "%$keyword%",
-    ]);
+      FROM expenses e
+
+      JOIN category c
+        ON c.id = e.category_id
+
+      WHERE e.description LIKE ? COLLATE NOCASE
+    """;
+
+    final List<dynamic> arguments = ["%$keyword%"];
+
+    if (month != null) {
+      sql += """
+        AND strftime('%m', e.date) = ?
+      """;
+
+      arguments.add(month.toString().padLeft(2, '0'));
+    }
+
+    sql += """
+      ORDER BY e.date DESC
+    """;
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
+    );
 
     return results.map((element) {
-      Category category = Category(
+      final category = Category(
         id: element["category_id"],
         name: element["name"],
         color: element["color"],
       );
 
-      Expense expense = Expense(
+      return Expense(
         id: element["id"],
         description: element["description"],
-        amount: element["amount"],
+        amount: (element["amount"] as num).toDouble(),
         category: category,
         date: DateTime.parse(element["date"]),
       );
-
-      return expense;
     }).toList();
   }
 
   static Future<List<Expense>> getByKeywordAndYear(
     String keyword,
-    int year,
-  ) async {
-    String sql =
-        "SELECT c.id as category_id, c.name, c.color, e.id, e.description, e.date, e.amount FROM expenses e JOIN category c ON c.id = e.category_id WHERE strftime('%Y', e.date) = ? AND description LIKE ? COLLATE NOCASE ORDER BY date DESC"; // COLLATE NOCASE pour ingorer les majuscules et minuscules
+    int year, {
+    int? month,
+  }) async {
+    String sql = """
+      SELECT
+        c.id AS category_id,
+        c.name,
+        c.color,
+        e.id,
+        e.description,
+        e.date,
+        e.amount
 
-    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
-      year.toString(),
-      "%$keyword%",
-    ]);
+      FROM expenses e
+
+      JOIN category c
+        ON c.id = e.category_id
+
+      WHERE strftime('%Y', e.date) = ?
+        AND e.description LIKE ? COLLATE NOCASE
+    """;
+
+    final List<dynamic> arguments = [year.toString(), "%$keyword%"];
+
+    // Si un mois est sélectionné
+    if (month != null) {
+      sql += """
+        AND strftime('%m', e.date) = ?
+      """;
+
+      arguments.add(month.toString().padLeft(2, '0'));
+    }
+
+    sql += """
+      ORDER BY e.date DESC
+    """;
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
+    );
 
     return results.map((element) {
-      Category category = Category(
+      final category = Category(
         id: element["category_id"],
         name: element["name"],
         color: element["color"],
       );
 
-      Expense expense = Expense(
+      return Expense(
         id: element["id"],
         description: element["description"],
-        amount: element["amount"],
+        amount: (element["amount"] as num).toDouble(),
         category: category,
         date: DateTime.parse(element["date"]),
       );
-
-      return expense;
     }).toList();
   }
 
@@ -440,7 +501,8 @@ class ExpenseRepository {
   }
 
   static Future<List<Month>> getListMonths(String year) async {
-    String sql ="""
+    String sql =
+        """
     SELECT DISTINCT
         strftime('%m', date) AS numero_mois,
         CASE strftime('%m', date)
@@ -461,31 +523,37 @@ class ExpenseRepository {
     WHERE strftime('%Y', date) = ?
     ORDER BY numero_mois ASC
     """;
-    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [year]);
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      year,
+    ]);
 
-    return results.map((item){
+    return results.map((item) {
       // return Month(
       //   "label": item["mois"].toString(),
       //   "value": item["numero_mois"].toString()
       // );
       return Month(
         label: item["mois"].toString(),
-        value: item["numero_mois"].toString()
+        value: item["numero_mois"].toString(),
       );
     }).toList();
   }
 
-  static Future<List<Expense>?> getExpenseByMonthAndYear(Category category, String month, String year)async{
+  static Future<List<Expense>?> getExpenseByMonthAndYear(
+    Category category,
+    String month,
+    String year,
+  ) async {
     final List<Map<String, dynamic>> results = await _database.query(
       _tableName,
       where: "strftime('%m', date) = ? AND strftime('%m', date)",
       whereArgs: [month, year],
-      orderBy: "date DESC"
+      orderBy: "date DESC",
     );
-    if(results.isEmpty){
+    if (results.isEmpty) {
       return null;
     }
-    return results.map((expense){
+    return results.map((expense) {
       return Expense.fromMap(expense, category: category);
     }).toList();
   }
