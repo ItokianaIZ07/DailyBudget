@@ -3,9 +3,11 @@ import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/total_widget.dart';
+import 'package:gestion_depenses/features/home/widgets/edit_modal.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/month.dart';
+import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 import 'package:gestion_depenses/services/history_service.dart';
 
@@ -29,6 +31,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Month? _selectedMonth;
   final List<Month> _months = [];
   double _totalExpense = 0;
+  final List<Category> _categories = [];
 
   Future<void> _loadExpenses() async {
     setState(() {
@@ -71,10 +74,7 @@ class _HistoryPageState extends State<HistoryPage> {
           child: SizeTransition(
             sizeFactor: animation,
             child: ExpenseCard(
-              description: removedExpense.description,
-              amount: removedExpense.amount,
-              category: removedExpense.category.name,
-              date: removedExpense.date,
+              expense: removedExpense,
               onDelete: () {},
             ),
           ),
@@ -158,10 +158,39 @@ class _HistoryPageState extends State<HistoryPage> {
     await _loadTotalExpense();
   }
 
+    Future<void> _loadCategories() async {
+    try {
+      final categories = await CategoryService.getAllCategories();
+      setState(() {
+        _categories.clear();
+        _categories.addAll(categories);
+      });
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors du chargement des catégories: $e",
+      );
+    }
+  }
+
+  Future<void> _showEditModal(BuildContext context, Expense expense) async {
+    final bool? modified = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return EditModal(categories: _categories, expense: expense);
+      },
+    );
+
+    if (modified == true) {
+      await _loadExpenses();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _refreshScreen();
+    _loadCategories();
     // _selectedValue = "2026";
   }
 
@@ -296,13 +325,13 @@ class _HistoryPageState extends State<HistoryPage> {
                                       child: SizeTransition(
                                         sizeFactor: animation,
                                         child: ExpenseCard(
-                                          description: expense.description,
-                                          amount: expense.amount,
-                                          category: expense.category.name,
-                                          date: expense.date,
+                                          expense: expense,
                                           onDelete: () async {
                                             await _deleteExpense(expense, index);
                                             await _refreshScreen();
+                                          },
+                                          onEdit: () async {
+                                            await _showEditModal(context, expense);
                                           },
                                         ),
                                       ),
