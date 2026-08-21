@@ -3,7 +3,7 @@ import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/total_widget.dart';
-import 'package:gestion_depenses/features/home/widgets/edit_modal.dart';
+import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/month.dart';

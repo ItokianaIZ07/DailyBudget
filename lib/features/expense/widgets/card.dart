@@ -87,7 +87,7 @@ class ExpenseCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    "${expense.category.name}.${DatetimeUtil.formatDate(expense.date)}",
+                    "${expense.category.name.substring(0, (expense.category.name.length / 2).toInt() +1)}.${DatetimeUtil.formatDate(expense.date)}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

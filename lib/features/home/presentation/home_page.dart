@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
-import 'package:gestion_depenses/features/home/widgets/edit_modal.dart';
+import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
 import 'package:gestion_depenses/features/home/widgets/home_page_header.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
