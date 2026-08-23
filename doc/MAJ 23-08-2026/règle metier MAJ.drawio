@@ -1,0 +1,148 @@
+<mxfile host="app.diagrams.net" modified="2026-08-23T00:00:00.000Z" agent="SpendWise Architecture" version="21.0.0" type="device">
+  <diagram id="spendwise-business-rules" name="Règles Métier & Architecture Logique SpendWise">
+    <mxGraphModel dx="1200" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- NIVEAU 1 : SALAIRE MENSUEL -->
+        <mxCell id="salary_node" value="SALAIRE MENSUEL&#10;(Unique par mois : Année + Mois)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="434" y="40" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- SEPARATION DES FLUX -->
+        <!-- BRANCHE GAUCHE : PREVISIONNEL (BUDGETS) -->
+        <mxCell id="group_plan" value="FLUX PRÉVISIONNEL (Allocations)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=30;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="150" width="410" height="260" as="geometry" />
+        </mxCell>
+
+        <mxCell id="daily_budget" value="BUDGET QUOTIDIEN&#10;(Unique par jour : Date → Budget)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="group_plan">
+          <mxGeometry x="105" y="50" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sum_budget" value="BUDGET PLANIFIÉ&#10;Σ Budgets Quotidiens du mois" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="group_plan">
+          <mxGeometry x="105" y="160" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_b1" edge="1" parent="group_plan" source="daily_budget" target="sum_budget">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- BRANCHE DROITE : REEL (DEPENSES) -->
+        <mxCell id="group_real" value="FLUX RÉEL (Consommation)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;startSize=30;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="639" y="150" width="410" height="260" as="geometry" />
+        </mxCell>
+
+        <mxCell id="daily_expense" value="DÉPENSES RÉELLES&#10;(1..N par jour : Date → Dépenses)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="group_real">
+          <mxGeometry x="105" y="50" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sum_expense" value="TOTAL DÉPENSÉ&#10;Σ Dépenses Réelles du mois" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="group_real">
+          <mxGeometry x="105" y="160" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_e1" edge="1" parent="group_real" source="daily_expense" target="sum_expense">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- RACORDEMENT DEPUIS SALAIRE -->
+        <mxCell id="edge_s1" edge="1" parent="1" source="salary_node" target="daily_budget">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_s2" edge="1" parent="1" source="salary_node" target="daily_expense">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- NIVEAU 2 : RÉSULTAT QUOTIDIEN -->
+        <mxCell id="daily_calc" value="RÉSULTAT QUOTIDIEN (Calculé en mémoire)&#10;Budget du Jour - Dépenses du Jour" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="404" y="440" width="360" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_dc1" edge="1" parent="1" source="daily_budget" target="daily_calc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_dc2" edge="1" parent="1" source="daily_expense" target="daily_calc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 3 CAS DU RESULTAT QUOTIDIEN -->
+        <mxCell id="res_reste" value="RESTE (&gt; 0)&#10;Non stocké / Pas une nouvelle allocation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="200" y="535" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="res_equilibre" value="ÉQUILIBRE (= 0)&#10;Budget totalement consommé" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="474" y="535" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="res_depassement" value="DÉPASSEMENT (&lt; 0)&#10;Consommation &gt; Allocation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="748" y="535" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_r1" edge="1" parent="1" source="daily_calc" target="res_reste">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_r2" edge="1" parent="1" source="daily_calc" target="res_equilibre">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_r3" edge="1" parent="1" source="daily_calc" target="res_depassement">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- NIVEAU 3 : INDICATEURS MENSUELS -->
+        <mxCell id="group_indicators" value="INDICATEURS GLOBAUX DU MOIS (Calculés à la volée)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;startSize=30;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="620" width="929" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ind_dispo" value="BUDGET DISPONIBLE À PLANIFIER&#10;&#10;Salaire - Budget Planifié" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="group_indicators">
+          <mxGeometry x="160" y="50" width="250" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ind_reel" value="RESTE RÉEL (ARGENT PHYSIQUE)&#10;&#10;Salaire - Total Dépensé" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="group_indicators">
+          <mxGeometry x="520" y="50" width="250" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- FLUX DE CALCUL VERS INDICATEURS -->
+        <mxCell id="edge_ind1" edge="1" parent="1" source="sum_budget" target="ind_dispo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="225" y="440" />
+              <mxPoint x="150" y="440" />
+              <mxPoint x="150" y="705" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="edge_ind2" edge="1" parent="1" source="sum_expense" target="ind_reel">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="944" y="440" />
+              <mxPoint x="1010" y="440" />
+              <mxPoint x="1010" y="705" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="edge_ind_sal1" edge="1" parent="1" source="salary_node" target="ind_dispo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="80" y="70" />
+              <mxPoint x="80" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="edge_ind_sal2" edge="1" parent="1" source="salary_node" target="ind_reel">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1090" y="70" />
+              <mxPoint x="1090" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

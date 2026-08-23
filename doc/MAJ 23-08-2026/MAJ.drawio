@@ -1,0 +1,287 @@
+<mxfile host="65bd71144e">
+    <diagram id="spendwise-workflow" name="Flux de Gestion Budgétaire SpendWise">
+        <mxGraphModel dx="736" dy="402" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="start" value="Ouverture App / Enregistrement Dépense" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="280" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond_salary" value="Salaire mensuel du mois en cours défini ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="250" width="180" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_salary" value="Afficher Formulaire : Saisir le Salaire Mensuel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="440" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond_daily" value="Budget du jour défini pour la date ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="250" width="180" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_daily" value="Saisir / Demander le Budget Quotidien" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="440" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cond_limit" value="Somme(Budgets du mois) + Dépassements &lt;= Salaire Mensuel ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="550" width="220" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_reject" value="Alerte : Le budget dépasse la capacité du Salaire Mensuel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="585" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_expense" value="Enregistrer la Dépense Quotidienne" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="280" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_calc" value="Calculer le solde du jour :&#xa;Solde = Budget Jour - Dépenses Jour" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="275" width="200" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="res_positive" value="Si Solde &gt;= 0 :&#xa;RESTE QUOTIDIEN&#xa;(Non réinjecté comme allocation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="160" width="200" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="res_negative" value="Si Solde &lt; 0 :&#xa;DÉPASSEMENT QUOTIDIEN&#xa;(Ajouté au total consommé sur le Salaire)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="390" width="200" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_global" value="Mise à jour du Tableau de Bord Mensuel&#xa;&#xa;Solde Global Mensuel = &#xa;Salaire - Sum(Budgets du Jour) - Sum(Dépassements Quotidien)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="810" y="530" width="300" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge1" parent="1" source="start" target="cond_salary" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge2" value="Non" parent="1" source="cond_salary" target="act_salary" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge3" value="Oui" parent="1" source="cond_salary" target="cond_daily" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge4" parent="1" source="act_salary" target="cond_daily" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="470"/>
+                            <mxPoint x="440" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge5" value="Non" parent="1" source="cond_daily" target="act_daily" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge6" value="Oui" parent="1" source="cond_daily" target="act_expense" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge7" parent="1" source="act_daily" target="cond_limit" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge8" value="Non" parent="1" source="cond_limit" target="act_reject" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge9" value="Oui" parent="1" source="cond_limit" target="act_expense" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="615"/>
+                            <mxPoint x="700" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge10" parent="1" source="act_expense" target="act_calc" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge11" parent="1" source="act_calc" target="res_positive" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge12" parent="1" source="act_calc" target="res_negative" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge13" parent="1" source="res_positive" target="act_global" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1150" y="195"/>
+                            <mxPoint x="1150" y="575"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge14" parent="1" source="res_negative" target="act_global" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1140" y="425"/>
+                            <mxPoint x="1140" y="575"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="ktxkekhC2Mz-KSzaXr0v" name="Règle Métier + Base de donnée">
+        <mxGraphModel dx="1051" dy="574" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-1" value="monthly_salary" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="110" y="130" width="140" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-2" value="id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-1">
+                    <mxGeometry y="30" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-3" value="month" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-1">
+                    <mxGeometry y="60" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-4" value="year(unique)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-1">
+                    <mxGeometry y="90" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-5" value="salary" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-1">
+                    <mxGeometry y="120" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-6" value="daily_budget" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="310" y="140" width="140" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-7" value="id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-6">
+                    <mxGeometry y="30" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-8" value="date(unique)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-6">
+                    <mxGeometry y="60" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-9" value="amount" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-6">
+                    <mxGeometry y="90" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-10" value="Expense" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="130" width="140" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-11" value="id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-10">
+                    <mxGeometry y="30" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-12" value="description" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-10">
+                    <mxGeometry y="60" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-13" value="amount" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-10">
+                    <mxGeometry y="90" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-14" value="date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-10">
+                    <mxGeometry y="120" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="0pWBJUvxzdzkUCzgzoUH-15" value="category_id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="0pWBJUvxzdzkUCzgzoUH-10">
+                    <mxGeometry y="150" width="140" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-3" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-1" target="YNU5PFc4g_R4OAArd07X-2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-1" value="Enregistrement&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;&amp;nbsp;dépense&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                    <mxGeometry x="30" y="370" width="170" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-9" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-2" target="YNU5PFc4g_R4OAArd07X-8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-13" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-2" target="YNU5PFc4g_R4OAArd07X-12">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-2" value="Si reste &amp;lt; 0" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="520" y="386.25" width="160" height="137.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-17" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-8" target="YNU5PFc4g_R4OAArd07X-16">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-8" value="dépassement: ajouté directement dans les dépenses" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="540" y="670" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-10" value="reste = budget - depense" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="425" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-12" value="Reste budget pour ce jour" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="780" y="425" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-16" value="Stat global" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="770" y="670" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-18" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.589;entryY=-0.004;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-12" target="YNU5PFc4g_R4OAArd07X-16">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-19" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Architecture&lt;/h1&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1490" y="110" width="180" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-22" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-20" target="YNU5PFc4g_R4OAArd07X-21">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-20" value="Salaire mensuel" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1260" y="230" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-25" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-21" target="YNU5PFc4g_R4OAArd07X-24">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-21" value="Somme budget par jour" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1235" y="360" width="170" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-23" value="Budget planifié" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1275" y="360" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-33" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-24" target="YNU5PFc4g_R4OAArd07X-28">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-24" value="Somme depense du mois" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1230" y="560" width="180" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-26" value="Comparaison" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1330" y="493.75" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-27" value="Dépense réelle" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1275" y="560" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-35" style="edgeStyle=none;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-28" target="YNU5PFc4g_R4OAArd07X-34">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-37" style="edgeStyle=none;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-28" target="YNU5PFc4g_R4OAArd07X-36">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-28" value="" style="triangle;whiteSpace=wrap;html=1;rotation=-90;" vertex="1" parent="1">
+                    <mxGeometry x="1290" y="720" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-41" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-34" target="YNU5PFc4g_R4OAArd07X-40">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-34" value="Budget disponible&lt;div&gt;Salaire - budgets&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1120" y="840" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-42" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-36" target="YNU5PFc4g_R4OAArd07X-40">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-36" value="Reste réel&lt;div&gt;Salaire - dépense&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1400" y="840" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-40" value="Situation du mois" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1260" y="990" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-45" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-43" target="YNU5PFc4g_R4OAArd07X-44">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-43" value="Budget du jour" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1730" y="230" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-47" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-44" target="YNU5PFc4g_R4OAArd07X-46">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-44" value="Dépense du jour" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1730" y="370" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-49" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-46" target="YNU5PFc4g_R4OAArd07X-48">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-46" value="Budget - dépense" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1730" y="510" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-52" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-48" target="YNU5PFc4g_R4OAArd07X-51">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-54" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-48" target="YNU5PFc4g_R4OAArd07X-53">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-56" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="YNU5PFc4g_R4OAArd07X-48" target="YNU5PFc4g_R4OAArd07X-55">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-48" value="" style="triangle;whiteSpace=wrap;html=1;rounded=0;rotation=90;" vertex="1" parent="1">
+                    <mxGeometry x="1760" y="640" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-51" value="Reste" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1590" y="650" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-53" value="Equilibre" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1730" y="760" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="YNU5PFc4g_R4OAArd07X-55" value="Dépassement" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="1870" y="650" width="120" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
