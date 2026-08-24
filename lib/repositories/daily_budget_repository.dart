@@ -4,12 +4,13 @@ import 'package:gestion_depenses/core/database/database_service.dart';
 
 class DailyBudgetRepository {
   static final _database = DatabaseService.instance.connexion!;
+  static final String _tableName = "daily_budget";
 
   static Future<DailyBudget?> getByDate(DateTime date) async {
     final dateString = date.toDateString();
 
     final results = await _database.query(
-      'daily_budget',
+      _tableName,
       where: 'date = ?',
       whereArgs: [dateString],
       limit: 1,
@@ -24,14 +25,14 @@ class DailyBudgetRepository {
 
   static Future<int> insert(DailyBudget budget) async {
     return await _database.insert(
-      'daily_budget',
+      _tableName,
       budget.toMap(),
     );
   }
 
   static Future<int> update(DailyBudget budget) async {
     return await _database.update(
-      'daily_budget',
+      _tableName,
       budget.toMap(),
       where: 'id = ?',
       whereArgs: [budget.id],
@@ -40,7 +41,7 @@ class DailyBudgetRepository {
 
   static Future<int> delete(int id) async {
     return await _database.delete(
-      'daily_budget',
+      _tableName,
       where: 'id = ?',
       whereArgs: [id],
     );
