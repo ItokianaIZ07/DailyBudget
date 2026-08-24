@@ -3,13 +3,14 @@ import 'package:gestion_depenses/core/database/database_service.dart';
 
 class MonthlySalaryRepository {
   static final _database = DatabaseService.instance.connexion!;
+  static final String _tableName = "monthly_salary";
 
   static Future<MonthlySalary?> getByMonth(
     int month,
     int year,
   ) async {
     final results = await _database.query(
-      'monthly_salary',
+      _tableName,
       where: 'month = ? AND year = ?',
       whereArgs: [month, year],
       limit: 1,
@@ -24,14 +25,14 @@ class MonthlySalaryRepository {
 
   static Future<int> insert(MonthlySalary salary) async {
     return await _database.insert(
-      'monthly_salary',
+      _tableName,
       salary.toMap(),
     );
   }
 
   static Future<int> update(MonthlySalary salary) async {
     return await _database.update(
-      'monthly_salary',
+      _tableName,
       salary.toMap(),
       where: 'id = ?',
       whereArgs: [salary.id],
@@ -40,7 +41,7 @@ class MonthlySalaryRepository {
 
   static Future<int> delete(int id) async {
     return await _database.delete(
-      'monthly_salary',
+      _tableName,
       where: 'id = ?',
       whereArgs: [id],
     );
