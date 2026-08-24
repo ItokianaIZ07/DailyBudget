@@ -3,7 +3,6 @@ import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/models/daily_budget_situation.dart';
 import 'package:gestion_depenses/models/monthly_budget_situation.dart';
 import 'package:gestion_depenses/models/monthly_salary.dart';
-import 'package:gestion_depenses/repositories/expense_repository.dart';
 import 'package:gestion_depenses/services/daily_budget_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 import 'package:gestion_depenses/services/monthly_salary_service.dart';
