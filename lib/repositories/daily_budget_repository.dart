@@ -46,4 +46,16 @@ class DailyBudgetRepository {
       whereArgs: [id],
     );
   }
+
+  static Future<double> getSumBudgetByPeriod(int month, int year) async {
+    String sql = "SELECT SUM(amount) as total FROM $_tableName WHERE month = ? AND year = ?";
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [month, year]);
+    double total = 0;
+    
+    for(var item in results){
+      total += item["total"];
+    }
+
+    return total;
+  }
 }

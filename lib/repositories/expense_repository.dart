@@ -1,3 +1,4 @@
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/models/category_limit.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense_category.dart';
@@ -556,6 +557,19 @@ class ExpenseRepository {
     return results.map((expense) {
       return Expense.fromMap(expense, category: category);
     }).toList();
+  }
+
+  static Future<double> getExpenseByDate(DateTime date) async{
+    String dateString = date.toDateString();
+    String sql = "SELECT SUM(amount) as total FROM $_tableName WHERE date = ?";
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [dateString]);
+    double total = 0;
+    
+    for(var element in results){
+      total += element["total"];
+    }
+
+    return total;
   }
 
   //   static Future<void> testDebugDates() async {
