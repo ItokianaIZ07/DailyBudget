@@ -12,7 +12,12 @@ import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+
+  final VoidCallback onNavigateToExpense;
+  const HomePage({
+    required this.onNavigateToExpense,
+    super.key
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -279,6 +284,14 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: AppTheme.colors.primary,
+      //   foregroundColor: AppTheme.colors.primarySoft,
+      //   onPressed: () {
+      //     widget.onNavigateToExpense.call();
+      //   },
+      //   child: Icon(Icons.add),
+      // ),
     );
   }
 }
