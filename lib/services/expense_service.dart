@@ -1,3 +1,4 @@
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';
@@ -146,5 +147,16 @@ class ExpenseService {
 
   static Future<void> updateExpense(Expense expense) async {
     await ExpenseRepository.updateExpense(expense);
+  }
+
+  static Future<double> calculateSumExpenseByDate(DateTime date) async {
+    return await ExpenseRepository.getExpenseByDate(date);
+  }
+
+  static Future<double> getExpenseOfTheMonth(int month, int year) async {
+    return await ExpenseRepository.getExpenseOfTheMonth(
+      DatetimeUtil.formatNumber(month),
+      year.toString(),
+    );
   }
 }
