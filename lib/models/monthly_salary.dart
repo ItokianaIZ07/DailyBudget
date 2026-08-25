@@ -2,7 +2,7 @@ class MonthlySalary {
   int? id;
   final int month;
   final int year;
-  final double amount;
+  double amount;
 
   MonthlySalary({
     this.id,
