@@ -159,4 +159,8 @@ class ExpenseService {
       year.toString(),
     );
   }
+
+  static Future<List<Expense>> getExpenseByLimit(int limit) async{
+    return await ExpenseRepository.getExpenseByLimit(limit);
+  }
 }

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/models/daily_budget_situation.dart';
 import 'package:gestion_depenses/models/monthly_budget_situation.dart';
@@ -42,7 +44,7 @@ class BudgetService {
       year,
     );
     if (monthlySalary == null) {
-      throw Exception("Aucune salaire n'a été fixé pour ce mois: $month");
+      throw MonthlySalaryNotFoundException(month, year);
     }
 
     double sumBudgetPlanified =
