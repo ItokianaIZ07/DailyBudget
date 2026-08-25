@@ -83,45 +83,47 @@ class _SalaryPageState extends State<SalaryPage> {
                 SizedBox(width: AppTheme.spacing.md),
 
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "Salaire",
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.colors.secondary,
+                  child: _message != null
+                      ? Text(_message!)
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Salaire",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.colors.secondary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatAr.format(_salary?.amount ?? 0.0),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: AppTheme.colors.text,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatAr.format(_salary?.amount ?? 0.0),
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: AppTheme.colors.text,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
                 ),
 
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
                   color: AppTheme.colors.primary,
-                  onPressed: () async{
-                    if(_salary != null){
+                  onPressed: () async {
+                    if (_salary != null) {
                       await showDialog(
                         context: context,
-                        builder: (context){
+                        builder: (context) {
                           return SalaryEditForm(
                             salary: _salary!,
                             onEdited: _loadSalary,
                           );
-                        }
+                        },
                       );
                     }
                   },
