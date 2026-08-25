@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/settings/pages/about_page.dart';
+import 'package:gestion_depenses/features/settings/pages/salary_page.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 import 'category_list_page.dart';
 import 'package:gestion_depenses/features/settings/widgets/option_menu.dart';
@@ -83,6 +84,12 @@ class SettingPage extends StatelessWidget {
           icon: Icon(Icons.info_outline),
           title: "${"à".toUpperCase()} propos",
           screen: AboutPage(),
+        ),
+        OptionMenu(
+          context: context,
+          icon: Icon(Icons.payments_outlined),
+          title: "Salaire",
+          screen: SalaryPage(),
         ),
       ],
     );
