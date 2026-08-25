@@ -572,6 +572,28 @@ class ExpenseRepository {
     return total;
   }
 
+  static Future<List<Expense>> getExpenseByLimit(int limit) async{
+    final List<Map<String, dynamic>> results = await _database.query(
+      _tableName,
+      orderBy: "date DESC",
+      limit: limit
+    );
+
+    List<Expense> expenses = [];
+
+    for (var map in results) {
+      Category? category = await CategoryRepository.getCategoryById(
+        map['category_id'],
+      );
+
+      if (category != null) {
+        expenses.add(Expense.fromMap(map, category: category));
+      }
+    }
+
+    return expenses;
+  }
+
   //   static Future<void> testDebugDates() async {
   //   // Sélectionne les dates brutes ainsi que la semaine et l'année calculées par SQLite
   //   String sql = """

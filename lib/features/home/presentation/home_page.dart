@@ -1,23 +1,27 @@
+// ignore_for_file: unused_catch_clause
+
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
 import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
 import 'package:gestion_depenses/features/home/widgets/home_page_header.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
+import 'package:gestion_depenses/features/home/widgets/salary_form.dart';
 import 'package:gestion_depenses/features/home/widgets/stat_card.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/models/monthly_budget_situation.dart';
+import 'package:gestion_depenses/models/monthly_salary.dart';
+import 'package:gestion_depenses/services/budget_service.dart';
 import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
+import 'package:gestion_depenses/services/monthly_salary_service.dart';
 
 class HomePage extends StatefulWidget {
-
   final VoidCallback onNavigateToExpense;
-  const HomePage({
-    required this.onNavigateToExpense,
-    super.key
-  });
+  const HomePage({required this.onNavigateToExpense, super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -35,6 +39,8 @@ class _HomePageState extends State<HomePage> {
       GlobalKey<AnimatedListState>();
 
   final List<Category> _categories = [];
+
+  MonthlyBudgetSituation? _monthlySituation;
 
   Future<void> _loadCategories() async {
     try {
@@ -56,7 +62,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final expenses = await ExpenseService.getAllExpenses();
+      final expenses = await ExpenseService.getExpenseByLimit(10);
 
       setState(() {
         _expenses.clear();
@@ -119,9 +125,61 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _checkMonthlySalary() async {
+    int month = DatetimeUtil.getNowMonth();
+    int year = DatetimeUtil.getNowYear();
+
+    try {
+      final situation = await BudgetService.getMonthlySituation(month, year);
+
+      if (!mounted) return;
+
+      setState(() {
+        _monthlySituation = situation;
+      });
+    } on MonthlySalaryNotFoundException catch (e) {
+      if (!mounted) return;
+
+      final double? salary = await showDialog<double>(
+        context: context,
+        builder: (context) {
+          return const SalaryForm();
+        },
+      );
+
+      if (!mounted) return;
+
+      if (salary != null) {
+        final MonthlySalary monthlySalary = MonthlySalary(
+          month: month,
+          year: year,
+          amount: salary,
+        );
+
+        await MonthlySalaryService.saveSalary(monthlySalary);
+
+        if (!mounted) return;
+
+        final situation = await BudgetService.getMonthlySituation(month, year);
+
+        if (!mounted) return;
+
+        setState(() {
+          _monthlySituation = situation;
+        });
+      }
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors de la vérification de la situation du mois : $e",
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+
+    _checkMonthlySalary();
 
     _initDate();
     _loadExpenses();
@@ -146,7 +204,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    HomePageHeader(title: "Bienvenue", date: date),
+                    HomePageHeader(title: "Bienvenue", date: date, montlySituation: _monthlySituation,),
                     const SizedBox(height: 20),
                     Text(
                       'Vue d’ensemble',

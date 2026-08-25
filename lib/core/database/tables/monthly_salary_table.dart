@@ -6,10 +6,10 @@ class MonthlySalaryTable {
     'id INTEGER PRIMARY KEY AUTOINCREMENT',
     'month INTEGER NOT NULL',
     'year INTEGER NOT NULL',
-    'salary REAL NOT NULL',
+    'amount REAL NOT NULL',
     'UNIQUE(month, year)',
     'CHECK(month BETWEEN 1 AND 12)',
-    'CHECK(salary >= 0)',
+    'CHECK(amount >= 0)',
   ];
 
   static Future<void> createTable(Database database) {
