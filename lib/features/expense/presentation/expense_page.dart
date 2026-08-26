@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/color_utils.dart';
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
+import 'package:gestion_depenses/features/expense/widgets/daily_budget_edit_form.dart';
 import 'package:gestion_depenses/features/expense/widgets/expense_widgets.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/services/category_service.dart';
+import 'package:gestion_depenses/services/daily_budget_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 
 class ExpensePage extends StatefulWidget {
@@ -26,6 +29,7 @@ class _ExpensePageState extends State<ExpensePage> {
   @override
   void initState() {
     super.initState();
+    _checkDailyBudget();
     _loadCategories();
   }
 
@@ -46,6 +50,27 @@ class _ExpensePageState extends State<ExpensePage> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _checkDailyBudget() async{
+    DateTime today = DateTime.now();
+    try{
+      await DailyBudgetService.getBudgetByDate(today);
+    // ignore: unused_catch_clause
+    } on DailyBudgetNotFound catch(e){
+      if(mounted){
+        
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context){
+            return DailyBudgetEditForm();
+          }
+        );
+      }
+    }catch(e){
+      debugPrint("Une erreur est survenue lors de la verification du budget quotidien: $e");
     }
   }
 
@@ -264,7 +289,7 @@ class _ExpensePageState extends State<ExpensePage> {
                       child: TextField(
                         controller: _descriptionController,
                         decoration: InputDecoration(
-                          hintText: 'Ex: Courses, carburant, cinéma...',
+                          hintText: 'Ex: Courses, carburant, pâtes...',
                           border: InputBorder.none,
                           hintStyle: TextStyle(
                             color: AppTheme.colors.textMuted,
