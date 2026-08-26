@@ -78,7 +78,7 @@ class _BudgetStatCardState extends State<BudgetStatCard> {
 		if(widget.situation != null){
 			if (widget.situation!.percentage /100 >= 0.90) {
 				progressColor = AppTheme.colors.danger;
-			} else if (widget.situation!.percentage / 100 >= 0.65) {
+			} else if (widget.situation!.percentage / 100 >= 0.50) {
 				progressColor = AppTheme.colors.accent;
 			}
 		}
