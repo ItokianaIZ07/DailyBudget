@@ -359,11 +359,13 @@ class _HomePageState extends State<HomePage> {
                                     expense: expense,
                                     onDelete: () async {
                                       await _deleteExpense(expense, index);
+                                      await _checkMonthlySalary();
                                       await _loadDailySituation();
                                     },
                                     onEdit: () async {
                                       await _showEditModal(context, expense);
                                       await _loadExpenses();
+                                      await _checkMonthlySalary();
                                       await _loadDailySituation();
                                     },
                                   ),
