@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/color_utils.dart';
 import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
-import 'package:gestion_depenses/features/expense/widgets/daily_budget_edit_form.dart';
+import 'package:gestion_depenses/core/widgets/daily_budget_edit_form.dart';
 import 'package:gestion_depenses/features/expense/widgets/expense_widgets.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense.dart';

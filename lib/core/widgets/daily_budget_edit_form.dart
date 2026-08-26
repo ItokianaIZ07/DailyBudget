@@ -6,8 +6,9 @@ import 'package:gestion_depenses/services/daily_budget_service.dart';
 
 class DailyBudgetEditForm extends StatefulWidget {
   final DailyBudget? budget;
+  final VoidCallback? onEdited;
 
-  const DailyBudgetEditForm({this.budget, super.key});
+  const DailyBudgetEditForm({this.budget, this.onEdited, super.key});
 
   @override
   State<DailyBudgetEditForm> createState() => _DailyBudgetEditFromState();
@@ -50,6 +51,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
             backgroundColor: AppTheme.colors.success,
           ),
         );
+        widget.onEdited?.call();
         Navigator.of(context).pop();
       }
     } catch (e) {

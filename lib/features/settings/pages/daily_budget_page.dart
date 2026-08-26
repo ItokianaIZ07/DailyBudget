@@ -1,40 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
-import 'package:gestion_depenses/core/utils/datetime_util.dart';
-import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
-import 'package:gestion_depenses/features/settings/widgets/salary_edit_form.dart';
-import 'package:gestion_depenses/models/monthly_salary.dart';
-import 'package:gestion_depenses/services/monthly_salary_service.dart';
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
+import 'package:gestion_depenses/core/widgets/daily_budget_edit_form.dart';
+import 'package:gestion_depenses/models/daily_budget.dart';
+import 'package:gestion_depenses/services/daily_budget_service.dart';
 
-class SalaryPage extends StatefulWidget {
-  const SalaryPage({super.key});
+class DailyBudgetPage extends StatefulWidget {
+  
+  const DailyBudgetPage({super.key});
 
   @override
-  State<SalaryPage> createState() => _SalaryPageState();
+  State<DailyBudgetPage> createState() => _DailyBudgetPageState();
 }
 
-class _SalaryPageState extends State<SalaryPage> {
+class _DailyBudgetPageState extends State<DailyBudgetPage> {
   final _formatAr = CurrencyUtil.getFormater();
-  MonthlySalary? _salary;
+  DailyBudget? _budget;
   String? _message;
 
-  Future<void> _loadSalary() async {
-    int month = DatetimeUtil.getNowMonth();
-    int year = DatetimeUtil.getNowYear();
+  Future<void> _loadTodayBudget() async {
+    DateTime today = DateTime.now();
 
     try {
-      final salary = await MonthlySalaryService.getSalary(month, year);
+      final budget = await DailyBudgetService.getBudgetByDate(today);
       setState(() {
-        _salary = salary;
+        _budget = budget;
       });
-    } on MonthlySalaryNotFoundException catch (e) {
+    } on DailyBudgetNotFound catch (e) {
       setState(() {
         _message = "$e";
       });
     } catch (e) {
       debugPrint(
-        "Une erreur est survenue lors du chargement du salaire mensuel dans paramètre: $e",
+        "Une erreur est survenue lors du chargement du budget dans paramètre: $e",
       );
     }
   }
@@ -43,7 +42,7 @@ class _SalaryPageState extends State<SalaryPage> {
   void initState() {
     super.initState();
 
-    _loadSalary();
+    _loadTodayBudget();
   }
 
   @override
@@ -54,7 +53,7 @@ class _SalaryPageState extends State<SalaryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Salaire")),
+      appBar: AppBar(title: const Text("Budget")),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(AppTheme.spacing.md),
         child: Card(
@@ -75,7 +74,7 @@ class _SalaryPageState extends State<SalaryPage> {
                     borderRadius: BorderRadius.circular(AppTheme.radius.sm),
                   ),
                   child: Icon(
-                    Icons.payments_outlined,
+                    Icons.attach_money_sharp,
                     color: AppTheme.colors.primary,
                   ),
                 ),
@@ -89,7 +88,7 @@ class _SalaryPageState extends State<SalaryPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "Salaire",
+                              "Budget d'ajourd'hui",
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.colors.secondary,
@@ -97,7 +96,7 @@ class _SalaryPageState extends State<SalaryPage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _formatAr.format(_salary?.amount ?? 0.0),
+                              _formatAr.format(_budget?.amount ?? 0.0),
                               style: TextStyle(
                                 fontSize: 18,
                                 color: AppTheme.colors.text,
@@ -114,19 +113,19 @@ class _SalaryPageState extends State<SalaryPage> {
                   icon: const Icon(Icons.edit_outlined),
                   color: AppTheme.colors.primary,
                   onPressed: () async {
-                    if (_salary != null) {
+                    if (_budget != null) {
                       await showDialog(
                         context: context,
                         builder: (context) {
-                          return SalaryEditForm(
-                            salary: _salary!,
-                            onEdited: _loadSalary,
+                          return DailyBudgetEditForm(
+                            budget: _budget,
+                            onEdited: _loadTodayBudget,
                           );
                         },
                       );
                     }
                   },
-                  tooltip: "Modifier le salaire",
+                  tooltip: "Modifier le budget",
                 ),
               ],
             ),
