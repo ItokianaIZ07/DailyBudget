@@ -1,4 +1,4 @@
-import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
 import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/models/daily_budget_situation.dart';
@@ -15,15 +15,15 @@ class BudgetService {
       date,
     );
     if (todayBudget == null) {
-      throw Exception(
-        "Aucun budget n'a été fixé pour la date: ${date.toDateString()}",
+      throw DailyBudgetNotFound(
+        date,
       );
     }
 
     double consommation = todayBudget.amount == 0
         ? 0
         : (todayTotalExpense / todayBudget.amount) * 100;
-
+    
     double result = todayBudget.amount - todayTotalExpense;
 
     return DailyBudgetSituation(

@@ -22,8 +22,8 @@ class DailyBudget {
   factory DailyBudget.fromMap(Map<String, dynamic> map){
     return DailyBudget(
       id: map["id"],
-      date: DateTime.parse(map["date"]),
-      amount: map["amount"]
+      date: DateTime.parse(map["date"] as String),
+      amount:(map["amount"] as num).toDouble(),
     );
   }
 }

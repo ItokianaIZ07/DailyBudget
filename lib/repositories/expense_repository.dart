@@ -561,7 +561,7 @@ class ExpenseRepository {
 
   static Future<double> getExpenseByDate(DateTime date) async{
     String dateString = date.toDateString();
-    String sql = "SELECT SUM(amount) as total FROM $_tableName WHERE date = ?";
+    String sql = "SELECT COALESCE(SUM(amount),0) as total FROM $_tableName WHERE strftime('%Y-%m-%d' ,date) = ?";
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [dateString]);
     double total = 0;
     

@@ -2,15 +2,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
-import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
+// import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
 import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
+import 'package:gestion_depenses/features/home/widgets/budget_stat_card.dart';
 import 'package:gestion_depenses/features/home/widgets/home_page_header.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
 import 'package:gestion_depenses/features/home/widgets/salary_form.dart';
-import 'package:gestion_depenses/features/home/widgets/stat_card.dart';
+// import 'package:gestion_depenses/features/home/widgets/stat_card.dart';
 import 'package:gestion_depenses/models/category.dart';
+import 'package:gestion_depenses/models/daily_budget_situation.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/monthly_budget_situation.dart';
 import 'package:gestion_depenses/models/monthly_salary.dart';
@@ -31,7 +34,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   String date = "";
 
-  final _formatAr = CurrencyUtil.getFormater();
+  // final _formatAr = CurrencyUtil.getFormater();
 
   final List<Expense> _expenses = [];
 
@@ -41,6 +44,10 @@ class _HomePageState extends State<HomePage> {
   final List<Category> _categories = [];
 
   MonthlyBudgetSituation? _monthlySituation;
+
+  DailyBudgetSituation? _situation;
+  String _message = "";
+
 
   Future<void> _loadCategories() async {
     try {
@@ -137,7 +144,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _monthlySituation = situation;
       });
-    } on MonthlySalaryNotFoundException catch (e) {
+    } on MonthlySalaryNotFoundException {
       if (!mounted) return;
 
       final double? salary = await showDialog<double>(
@@ -176,6 +183,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadDailySituation() async {
+    DateTime today = DateTime.now();
+    try {
+      final situation = await BudgetService.getDailySituation(today);
+      setState(() {
+        _situation = situation;
+      });
+    } on DailyBudgetNotFound catch (e) {
+      setState(() {
+        _message = "$e";
+      });
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors de la recuperation de la situation du budget quotidient dans la page home: $e",
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -185,11 +210,12 @@ class _HomePageState extends State<HomePage> {
     _initDate();
     _loadExpenses();
     _loadCategories();
+    _loadDailySituation();
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalDepense = ExpenseService.sumExpenseAmount(_expenses);
+    // final totalDepense = ExpenseService.sumExpenseAmount(_expenses);
 
     return Scaffold(
       backgroundColor: AppTheme.colors.background,
@@ -205,44 +231,48 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    HomePageHeader(title: "Bienvenue", date: date, montlySituation: _monthlySituation,),
+                    HomePageHeader(title: "Bonjour", date: date, montlySituation: _monthlySituation,),
                     const SizedBox(height: 20),
-                    Text(
-                      'Vue d’ensemble',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.colors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 170,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.zero,
-                        children: [
-                          SizedBox(
-                            width: 230,
-                            child: StatCard(
-                              title: 'Dépenses totales',
-                              mainContent: _formatAr.format(totalDepense),
-                              icon: Icons.payments_outlined,
-                              accentColor: AppTheme.colors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          SizedBox(
-                            width: 180,
-                            child: StatCard(
-                              title: 'Transactions',
-                              mainContent: _expenses.length.toString(),
-                              icon: Icons.receipt_long_outlined,
-                              accentColor: AppTheme.colors.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
+                    // Text(
+                    //   'Vue d’ensemble',
+                    //   style: TextStyle(
+                    //     fontSize: 18,
+                    //     fontWeight: FontWeight.w700,
+                    //     color: AppTheme.colors.text,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 14),
+                    // SizedBox(
+                    //   height: 170,
+                    //   child: ListView(
+                    //     scrollDirection: Axis.horizontal,
+                    //     padding: EdgeInsets.zero,
+                    //     children: [
+                    //       SizedBox(
+                    //         width: 230,
+                    //         child: StatCard(
+                    //           title: 'Dépenses totales',
+                    //           mainContent: _formatAr.format(totalDepense),
+                    //           icon: Icons.payments_outlined,
+                    //           accentColor: AppTheme.colors.primary,
+                    //         ),
+                    //       ),
+                    //       const SizedBox(width: 12),
+                    //       SizedBox(
+                    //         width: 180,
+                    //         child: StatCard(
+                    //           title: 'Transactions',
+                    //           mainContent: _expenses.length.toString(),
+                    //           icon: Icons.receipt_long_outlined,
+                    //           accentColor: AppTheme.colors.secondary,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    BudgetStatCard(
+                      situation: _situation,
+                      message: _message,
                     ),
                     const SizedBox(height: 22),
                     Row(
@@ -329,10 +359,12 @@ class _HomePageState extends State<HomePage> {
                                     expense: expense,
                                     onDelete: () async {
                                       await _deleteExpense(expense, index);
+                                      await _loadDailySituation();
                                     },
                                     onEdit: () async {
                                       await _showEditModal(context, expense);
                                       await _loadExpenses();
+                                      await _loadDailySituation();
                                     },
                                   ),
                                 ),
