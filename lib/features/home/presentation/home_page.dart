@@ -142,6 +142,7 @@ class _HomePageState extends State<HomePage> {
 
       final double? salary = await showDialog<double>(
         context: context,
+        barrierDismissible: false,
         builder: (context) {
           return const SalaryForm();
         },

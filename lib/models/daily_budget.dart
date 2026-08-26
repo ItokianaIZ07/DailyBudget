@@ -1,7 +1,9 @@
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
+
 class DailyBudget {
   int? id;
   final DateTime date;
-  final double amount;
+  double amount;
 
   DailyBudget({
     this.id,
@@ -12,7 +14,7 @@ class DailyBudget {
   Map<String, dynamic> toMap(){
     return {
       'id': id,
-      'date': date,
+      'date': date.toDateString(),
       'amount': amount
     };
   }

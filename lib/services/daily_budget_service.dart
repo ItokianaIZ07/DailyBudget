@@ -1,9 +1,14 @@
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/repositories/daily_budget_repository.dart';
 
 class DailyBudgetService {
   static Future<DailyBudget?> getBudgetByDate(DateTime date) async {
-    return await DailyBudgetRepository.getByDate(date);
+    final budget =  await DailyBudgetRepository.getByDate(date);
+    if(budget == null){
+      throw DailyBudgetNotFound(date);
+    }
+    return budget;
   }
 
   static Future<int> saveBudget(DailyBudget budget) async {
