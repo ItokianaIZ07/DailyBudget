@@ -1,5 +1,3 @@
-// ignore_for_file: unused_catch_clause
-
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
@@ -359,13 +357,11 @@ class _HomePageState extends State<HomePage> {
                                     expense: expense,
                                     onDelete: () async {
                                       await _deleteExpense(expense, index);
-                                      await _checkMonthlySalary();
                                       await _loadDailySituation();
                                     },
                                     onEdit: () async {
                                       await _showEditModal(context, expense);
                                       await _loadExpenses();
-                                      await _checkMonthlySalary();
                                       await _loadDailySituation();
                                     },
                                   ),

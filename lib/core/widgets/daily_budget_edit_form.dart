@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/exception/negative_amount_value.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/services/daily_budget_service.dart';
 
@@ -40,9 +41,24 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
       if (widget.budget != null) {
         widget.budget!.amount = budget;
         await DailyBudgetService.updateBudget(widget.budget!);
-      }else{
-        DailyBudget newBudget = DailyBudget(date: DateTime.now(), amount: budget);
-        await DailyBudgetService.saveBudget(newBudget);
+      } else {
+        DailyBudget newBudget = DailyBudget(
+          date: DateTime.now(),
+          amount: budget,
+        );
+        try {
+          await DailyBudgetService.saveBudget(newBudget);
+        } on NegativeAmountValue catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("$e"),
+                backgroundColor: AppTheme.colors.danger,
+              ),
+            );
+            return;
+          }
+        }
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
