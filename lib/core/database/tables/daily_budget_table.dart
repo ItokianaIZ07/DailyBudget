@@ -6,6 +6,7 @@ class DailyBudgetTable {
     'id INTEGER PRIMARY KEY AUTOINCREMENT',
     'date TEXT NOT NULL',
     'amount REAL NOT NULL',
+    'notification_sent INTEGER DEFAULT 0',
     'UNIQUE(date)',
     'CHECK(amount >= 0)',
   ];

@@ -58,4 +58,9 @@ class DailyBudgetRepository {
 
     return total;
   }
+
+  static Future<void> changeNotificationState(int dailBudgetId, {int state = 0}) async{
+    String sql = "UPDATE $_tableName SET notification_sent=? WHERE id = ?";
+    await _database.execute(sql, [state, dailBudgetId]);
+  }
 }

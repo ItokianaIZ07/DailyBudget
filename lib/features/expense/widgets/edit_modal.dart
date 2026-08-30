@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/core/widgets/app_snackbar.dart';
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
@@ -99,7 +101,12 @@ class _EditModalState extends State<EditModal> {
       // true = modification effectuée
       Navigator.pop(context, true);
       AppSnackBar.success(context, "Dépense modifiée avec succès");
-    } catch (e) {
+    } on DailyBudgetNotFound {
+      if(!mounted) return;
+
+      AppSnackBar.error(context, "Aucun budget n'a été fixé pour la date ${DatetimeUtil.formatDate(editedExpense.date)}");
+    }
+    catch (e) {
       if (!mounted) return;
 
       setState(() {

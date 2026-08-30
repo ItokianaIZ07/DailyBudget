@@ -220,8 +220,10 @@ class _ExpensePageState extends State<ExpensePage> {
     switch(success){
       case true:
         AppSnackBar.success(context, message);
+        break;
       default:
         AppSnackBar.error(context, message);
+        break;
     }
   }
 

@@ -46,7 +46,6 @@ class _HomePageState extends State<HomePage> {
   DailyBudgetSituation? _situation;
   String _message = "";
 
-
   Future<void> _loadCategories() async {
     try {
       final categories = await CategoryService.getAllCategories();
@@ -194,7 +193,7 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       debugPrint(
-        "Une erreur est survenue lors de la recuperation de la situation du budget quotidient dans la page home: $e",
+        "Une erreur est survenue lors de la recuperation de la situation du budget quotidien dans la page home: $e",
       );
     }
   }
@@ -229,7 +228,11 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    HomePageHeader(title: "Bonjour", date: date, montlySituation: _monthlySituation,),
+                    HomePageHeader(
+                      title: "Bonjour",
+                      date: date,
+                      montlySituation: _monthlySituation,
+                    ),
                     const SizedBox(height: 20),
                     // Text(
                     //   'Vue d’ensemble',
@@ -268,10 +271,7 @@ class _HomePageState extends State<HomePage> {
                     //     ],
                     //   ),
                     // ),
-                    BudgetStatCard(
-                      situation: _situation,
-                      message: _message,
-                    ),
+                    BudgetStatCard(situation: _situation, message: _message),
                     const SizedBox(height: 22),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -376,8 +376,12 @@ class _HomePageState extends State<HomePage> {
       // floatingActionButton: FloatingActionButton(
       //   backgroundColor: AppTheme.colors.primary,
       //   foregroundColor: AppTheme.colors.primarySoft,
-      //   onPressed: () {
-      //     widget.onNavigateToExpense.call();
+      //   onPressed: () async {
+      //     // widget.onNavigateToExpense.call();
+      //     await NotificationService.instance.showNotification(
+      //       title: "SpendWise",
+      //       body: "Test de notification",
+      //     );
       //   },
       //   child: Icon(Icons.add),
       // ),

@@ -594,6 +594,15 @@ class ExpenseRepository {
     return expenses;
   }
 
+  static Future<List<DateTime>> getAllExpenseDates() async{
+    String sql = "SELECT DISTINCT date FROM $_tableName";
+    List<Map<String, dynamic>> results = await _database.rawQuery(sql);
+    
+    return results.map((item){
+      return DateTime.parse(item["date"] as String);
+    }).toList();
+  }
+
   //   static Future<void> testDebugDates() async {
   //   // Sélectionne les dates brutes ainsi que la semaine et l'année calculées par SQLite
   //   String sql = """

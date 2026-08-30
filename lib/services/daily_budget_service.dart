@@ -41,4 +41,8 @@ class DailyBudgetService {
   static Future<double> calculateSumBudgetByPeriod(int month, int year) async{
     return await DailyBudgetRepository.getSumBudgetByPeriod(month, year);
   }
+
+  static Future<void> changeNotificationState(int id, int state)async{
+    await DailyBudgetRepository.changeNotificationState(id, state: state);
+  }
 }

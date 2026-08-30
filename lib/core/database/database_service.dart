@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:gestion_depenses/core/database/migrations/database_migration.dart';
 import 'package:gestion_depenses/core/database/tables/daily_budget_table.dart';
 import 'package:gestion_depenses/core/database/tables/monthly_salary_table.dart';

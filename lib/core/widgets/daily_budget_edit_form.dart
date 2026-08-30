@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
-import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/core/widgets/app_snackbar.dart';
 import 'package:gestion_depenses/exception/negative_amount_value.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
@@ -10,7 +9,11 @@ class DailyBudgetEditForm extends StatefulWidget {
   final DailyBudget? budget;
   final VoidCallback? onEdited;
 
-  const DailyBudgetEditForm({this.budget, this.onEdited, super.key});
+  const DailyBudgetEditForm({
+    this.budget,
+    this.onEdited,
+    super.key,
+  });
 
   @override
   State<DailyBudgetEditForm> createState() => _DailyBudgetEditFromState();
@@ -19,7 +22,8 @@ class DailyBudgetEditForm extends StatefulWidget {
 class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _budgetController = TextEditingController();
-  String? _today;
+
+  late DateTime _selectedDate;
 
   String? _checkValue(double? value) {
     if (value == null) {
@@ -27,26 +31,48 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
     }
 
     if (value <= 0) {
-      return 'Le salaire doit être supérieur à 0';
+      return 'Le budget doit être supérieur à 0';
     }
+
     return null;
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
   }
 
   Future<void> _submit(BuildContext context) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    final budget = double.parse(_budgetController.text);
+
+    final budget = double.parse(
+      _budgetController.text.replaceAll(',', '.'),
+    );
 
     try {
       if (widget.budget != null) {
         widget.budget!.amount = budget;
+        widget.budget!.date = _selectedDate;
+
         await DailyBudgetService.updateBudget(widget.budget!);
       } else {
-        DailyBudget newBudget = DailyBudget(
-          date: DateTime.now(),
+        final DailyBudget newBudget = DailyBudget(
+          date: _selectedDate,
           amount: budget,
         );
+
         try {
           await DailyBudgetService.saveBudget(newBudget);
         } on NegativeAmountValue catch (e) {
@@ -56,6 +82,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
           }
         }
       }
+
       if (context.mounted) {
         AppSnackBar.success(context, "Budget enregistré");
         widget.onEdited?.call();
@@ -63,36 +90,57 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
       }
     } catch (e) {
       debugPrint(
-        "Une erreur est survenue lors de l'enregistrement du budget quotidien: $e",
+        "Une erreur est survenue lors de l'enregistrement "
+        "du budget quotidien : $e",
       );
+
       if (context.mounted) {
-        AppSnackBar.error(context, "Erreur de l'enregistrement du budget quotidien");
+        AppSnackBar.error(
+          context,
+          "Erreur lors de l'enregistrement du budget quotidien",
+        );
       }
     }
-  }
-
-  Future<void> _loadDateOfToday() async {
-    final date = await DatetimeUtil.getDate();
-    setState(() {
-      _today = date;
-    });
   }
 
   @override
   void initState() {
     super.initState();
+
     if (widget.budget != null) {
       _budgetController.text = widget.budget!.amount.toString();
+      _selectedDate = widget.budget!.date;
+    } else {
+      final now = DateTime.now();
+      _selectedDate = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      );
     }
-    _loadDateOfToday();
+  }
+
+  @override
+  void dispose() {
+    _budgetController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final String formattedDate =
+        "${_selectedDate.day.toString().padLeft(2, '0')}/"
+        "${_selectedDate.month.toString().padLeft(2, '0')}/"
+        "${_selectedDate.year}";
+
     return AlertDialog(
       title: Text(
-        widget.budget == null ? "Budget du jour" : "Modification du budget",
-        style: TextStyle(fontWeight: FontWeight.bold),
+        widget.budget == null
+            ? "Budget quotidien"
+            : "Modification du budget",
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: Form(
         key: _formKey,
@@ -100,8 +148,20 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Definissez votre budget pour le ${_today ?? DateTime.now().toDateString()}",
+            const Text("Date du budget"),
+
+            const SizedBox(height: 8),
+
+            InkWell(
+              onTap: _selectDate,
+              borderRadius: BorderRadius.circular(8),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                child: Text(formattedDate),
+              ),
             ),
 
             const SizedBox(height: 20),
@@ -111,8 +171,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: InputDecoration(
-                iconColor: AppTheme.colors.primary,
+              decoration: const InputDecoration(
                 labelText: 'Budget',
                 hintText: 'Exemple : 1500000',
                 suffixText: 'Ar',
@@ -120,10 +179,12 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Veuillez renseigner votre salaire';
+                  return 'Veuillez renseigner votre budget';
                 }
 
-                final budget = double.tryParse(value);
+                final budget = double.tryParse(
+                  value.replaceAll(',', '.'),
+                );
 
                 return _checkValue(budget);
               },
@@ -133,29 +194,28 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
       ),
       actions: [
         Row(
-          mainAxisAlignment: widget.budget == null
-              ? MainAxisAlignment.center
-              : MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            widget.budget != null
-                ? FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.colors.danger,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text("Annuler"),
-                  )
-                : Divider(),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.colors.danger,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text("Annuler"),
+            ),
+
             TextButton.icon(
               onPressed: () async {
                 await _submit(context);
               },
               label: Text(
                 "Définir le budget",
-                style: TextStyle(color: AppTheme.colors.primarySoft),
+                style: TextStyle(
+                  color: AppTheme.colors.primarySoft,
+                ),
               ),
               icon: Icon(
                 Icons.check_circle,
