@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/core/widgets/app_snackbar.dart';
 import 'package:gestion_depenses/exception/negative_amount_value.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/services/daily_budget_service.dart';
@@ -50,23 +51,13 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
           await DailyBudgetService.saveBudget(newBudget);
         } on NegativeAmountValue catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("$e"),
-                backgroundColor: AppTheme.colors.danger,
-              ),
-            );
+            AppSnackBar.error(context, "$e");
             return;
           }
         }
       }
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Budget enregistée'),
-            backgroundColor: AppTheme.colors.success,
-          ),
-        );
+        AppSnackBar.success(context, "Budget enregistré");
         widget.onEdited?.call();
         Navigator.of(context).pop();
       }
@@ -75,12 +66,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
         "Une erreur est survenue lors de l'enregistrement du budget quotidien: $e",
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Erreur de l'enregistrement du budget quotidien"),
-            backgroundColor: AppTheme.colors.danger,
-          ),
-        );
+        AppSnackBar.error(context, "Erreur de l'enregistrement du budget quotidien");
       }
     }
   }

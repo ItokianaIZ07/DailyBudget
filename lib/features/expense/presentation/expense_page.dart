@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/color_utils.dart';
+import 'package:gestion_depenses/core/widgets/app_snackbar.dart';
 import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
 import 'package:gestion_depenses/core/widgets/daily_budget_edit_form.dart';
 import 'package:gestion_depenses/features/expense/widgets/expense_widgets.dart';
@@ -216,14 +217,12 @@ class _ExpensePageState extends State<ExpensePage> {
   }
 
   void _showMessage(String message, {bool success = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: success
-            ? AppTheme.colors.success
-            : AppTheme.colors.danger,
-      ),
-    );
+    switch(success){
+      case true:
+        AppSnackBar.success(context, message);
+      default:
+        AppSnackBar.error(context, message);
+    }
   }
 
   
