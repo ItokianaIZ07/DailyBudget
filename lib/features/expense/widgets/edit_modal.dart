@@ -98,7 +98,7 @@ class _EditModalState extends State<EditModal> {
 
       // true = modification effectuée
       Navigator.pop(context, true);
-      AppSnackBar.info(context, "Dépense modifiée avec succès");
+      AppSnackBar.success(context, "Dépense modifiée avec succès");
     } catch (e) {
       if (!mounted) return;
 

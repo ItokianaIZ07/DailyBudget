@@ -4,14 +4,14 @@ import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/models/daily_budget_situation.dart';
 
 class BudgetStatCard extends StatefulWidget {
-	final DailyBudgetSituation? situation;
-	final String message;
+  final DailyBudgetSituation? situation;
+  final String message;
 
   const BudgetStatCard({
-		required this.situation,
-		required this.message,
-		super.key
-	});
+    required this.situation,
+    required this.message,
+    super.key,
+  });
 
   @override
   State<BudgetStatCard> createState() => _BudgetStatCardState();
@@ -19,7 +19,6 @@ class BudgetStatCard extends StatefulWidget {
 
 class _BudgetStatCardState extends State<BudgetStatCard> {
   final _formatAr = CurrencyUtil.getFormater();
-
 
   Widget _buildSummaryPanel({
     required double budget,
@@ -74,14 +73,14 @@ class _BudgetStatCardState extends State<BudgetStatCard> {
 
   @override
   Widget build(BuildContext context) {
-		Color progressColor = AppTheme.colors.primary;
-		if(widget.situation != null){
-			if (widget.situation!.percentage /100 >= 0.90) {
-				progressColor = AppTheme.colors.danger;
-			} else if (widget.situation!.percentage / 100 >= 0.50) {
-				progressColor = AppTheme.colors.accent;
-			}
-		}
+    Color progressColor = AppTheme.colors.primary;
+    if (widget.situation != null) {
+      if (widget.situation!.percentage / 100 >= 0.90) {
+        progressColor = AppTheme.colors.danger;
+      } else if (widget.situation!.percentage / 100 >= 0.50) {
+        progressColor = AppTheme.colors.accent;
+      }
+    }
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -98,6 +97,7 @@ class _BudgetStatCardState extends State<BudgetStatCard> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        // crossAxisAlignment: CrossAxisAlignment.end,
         spacing: AppTheme.spacing.lg,
         children: [
           Row(
@@ -120,19 +120,41 @@ class _BudgetStatCardState extends State<BudgetStatCard> {
             _buildSummaryPanel(
               budget: widget.situation!.budget,
               depense: widget.situation!.spent,
-              reste: widget.situation!.remaining, 
+              reste: widget.situation!.remaining,
             ),
             LinearProgressIndicator(
               value: widget.situation!.budget > 0
                   ? (widget.situation!.percentage / 100).clamp(0.0, 1.0)
                   : 0.0,
               borderRadius: BorderRadius.circular(8),
-              minHeight: 10, 
-							backgroundColor: AppTheme.colors.surfaceMuted,
-							color: progressColor,
+              minHeight: 10,
+              backgroundColor: AppTheme.colors.surfaceMuted,
+              color: progressColor,
             ),
-						if(widget.situation!.percentage > 100)
-							Text("Dépassement: ${_formatAr.format(widget.situation!.remaining * -1)}")
+            Row(
+              mainAxisAlignment: widget.situation!.percentage > 100
+                  ? MainAxisAlignment.spaceBetween
+                  : MainAxisAlignment.end,
+              children: [
+                if (widget.situation!.percentage > 100)
+                  Text(
+                    "Dépassement: ${_formatAr.format(widget.situation!.remaining * -1)}",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.colors.text,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                Text(
+                  "${widget.situation!.percentage.toStringAsFixed(1)}% consommé",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.colors.text,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
