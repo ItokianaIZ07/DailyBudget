@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
+import 'package:gestion_depenses/features/history/widgets/budget_info_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/total_widget.dart';
 import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
 
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/models/expense_group.dart';
 import 'package:gestion_depenses/models/month.dart';
 
 import 'package:gestion_depenses/services/category_service.dart';
@@ -25,10 +28,10 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-
   final List<Expense> _expenses = [];
   final List<Month> _months = [];
   final List<Category> _categories = [];
+  final List<ExpenseGroup> _expenseGroups = [];
 
   Category? _selectedCategory;
   Month? _selectedMonth;
@@ -51,10 +54,16 @@ class _HistoryPageState extends State<HistoryPage> {
 
       if (!mounted) return;
 
+      final groups = await ExpenseService.groupExpensesByDate(expenses);
+
       setState(() {
         _expenses
           ..clear()
           ..addAll(expenses);
+
+        _expenseGroups
+          ..clear()
+          ..addAll(groups);
 
         _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
@@ -92,11 +101,16 @@ class _HistoryPageState extends State<HistoryPage> {
       );
 
       if (!mounted) return;
+      final groups = await ExpenseService.groupExpensesByDate(expenses);
 
       setState(() {
         _expenses
           ..clear()
           ..addAll(expenses);
+
+        _expenseGroups
+          ..clear()
+          ..addAll(groups);
 
         _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
@@ -111,8 +125,12 @@ class _HistoryPageState extends State<HistoryPage> {
 
       if (!mounted) return;
 
+      _expenses.removeWhere((item) => item.id == expense.id);
+      final groups = await ExpenseService.groupExpensesByDate(_expenses);
       setState(() {
-        _expenses.removeWhere((item) => item.id == expense.id);
+        _expenseGroups
+          ..clear()
+          ..addAll(groups);
 
         _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
@@ -329,28 +347,309 @@ class _HistoryPageState extends State<HistoryPage> {
                           else
                             ListView.builder(
                               shrinkWrap: true,
-
                               physics: const NeverScrollableScrollPhysics(),
-
-                              itemCount: _expenses.length,
-
+                              itemCount: _expenseGroups.length,
                               padding: const EdgeInsets.only(
                                 bottom: 8,
                                 left: 8,
                                 right: 8,
                               ),
-
                               itemBuilder: (context, index) {
-                                final expense = _expenses[index];
+                                final group = _expenseGroups[index];
+                                final situation = group.situation;
 
-                                return ExpenseCard(
-                                  expense: expense,
-                                  onDelete: () async {
-                                    await _deleteExpense(expense);
-                                  },
-                                  onEdit: () async {
-                                    await _showEditModal(context, expense);
-                                  },
+                                final bool isOverBudget =
+                                    situation != null &&
+                                    situation.remaining < 0;
+
+                                final double progress = situation == null
+                                    ? 0
+                                    : (situation.percentage / 100).clamp(
+                                        0.0,
+                                        1.0,
+                                      );
+
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // ─────────────────────────────
+                                      // DATE
+                                      // ─────────────────────────────
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.colors.primary
+                                                    .withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Icon(
+                                                Icons.calendar_today_rounded,
+                                                size: 18,
+                                                color: AppTheme.colors.primary,
+                                              ),
+                                            ),
+
+                                            const SizedBox(width: 10),
+
+                                            Text(
+                                              DatetimeUtil.formatDate(
+                                                group.date,
+                                              ),
+                                              style: const TextStyle(
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+
+                                            const Spacer(),
+
+                                            Text(
+                                              '${group.expenses.length} '
+                                              '${group.expenses.length > 1 ? "dépenses" : "dépense"}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color:
+                                                    AppTheme.colors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 10),
+
+                                      // ─────────────────────────────
+                                      // SITUATION DU BUDGET
+                                      // ─────────────────────────────
+                                      if (situation != null)
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 10,
+                                          ),
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.colors.surface,
+                                            borderRadius: BorderRadius.circular(
+                                              AppTheme.radius.sm,
+                                            ),
+                                            border: Border.all(
+                                              color: isOverBudget
+                                                  ? AppTheme.colors.danger
+                                                        .withValues(alpha: 0.35)
+                                                  : AppTheme.colors.border,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // En-tête
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    isOverBudget
+                                                        ? Icons
+                                                              .warning_amber_rounded
+                                                        : Icons
+                                                              .account_balance_wallet_outlined,
+                                                    size: 19,
+                                                    color: isOverBudget
+                                                        ? AppTheme.colors.danger
+                                                        : AppTheme
+                                                              .colors
+                                                              .primary,
+                                                  ),
+
+                                                  const SizedBox(width: 8),
+
+                                                  Text(
+                                                    isOverBudget
+                                                        ? "Budget dépassé"
+                                                        : "Situation du budget",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: isOverBudget
+                                                          ? AppTheme
+                                                                .colors
+                                                                .danger
+                                                          : AppTheme
+                                                                .colors
+                                                                .text,
+                                                    ),
+                                                  ),
+
+                                                  const Spacer(),
+
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 4,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: isOverBudget
+                                                          ? AppTheme
+                                                                .colors
+                                                                .danger
+                                                                .withValues(
+                                                                  alpha: 0.1,
+                                                                )
+                                                          : AppTheme
+                                                                .colors
+                                                                .primary
+                                                                .withValues(
+                                                                  alpha: 0.1,
+                                                                ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            20,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      '${situation.percentage.toStringAsFixed(0)} %',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: isOverBudget
+                                                            ? AppTheme
+                                                                  .colors
+                                                                  .danger
+                                                            : AppTheme
+                                                                  .colors
+                                                                  .primary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              const SizedBox(height: 14),
+
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: BudgetInfoWidget(
+                                                      label: "Budget",
+                                                      value:
+                                                          "${situation.budget.toStringAsFixed(0)} Ar",
+                                                    ),
+                                                  ),
+
+                                                  Expanded(
+                                                    child: BudgetInfoWidget(
+                                                      label: "Dépensé",
+                                                      value:
+                                                          "${situation.spent.toStringAsFixed(0)} Ar",
+                                                      valueColor: AppTheme.colors.danger
+                                                    ),
+                                                  ),
+
+                                                  Expanded(
+                                                    child: BudgetInfoWidget(
+                                                      label: isOverBudget
+                                                          ? "Dépassement"
+                                                          : "Reste",
+                                                      value:
+                                                          "${situation.remaining.abs().toStringAsFixed(0)} Ar",
+                                                      valueColor: isOverBudget
+                                                          ? AppTheme
+                                                                .colors
+                                                                .danger
+                                                          : AppTheme
+                                                                .colors
+                                                                .success,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              const SizedBox(height: 14),
+
+                                              // Barre de progression
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                child: LinearProgressIndicator(
+                                                  minHeight: 7,
+                                                  value: progress,
+                                                  backgroundColor: AppTheme
+                                                      .colors
+                                                      .border
+                                                      .withValues(alpha: 0.4),
+                                                  color: isOverBudget
+                                                      ? AppTheme.colors.danger
+                                                      : situation.percentage >
+                                                            50
+                                                      ? AppTheme.colors.danger
+                                                      : AppTheme.colors.primary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                      ...group.expenses.map(
+                                        (expense) => Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 6,
+                                          ),
+                                          child: ExpenseCard(
+                                            expense: expense,
+                                            onDelete: () async {
+                                              await _deleteExpense(expense);
+                                            },
+                                            onEdit: () async {
+                                              await _showEditModal(
+                                                context,
+                                                expense,
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 6,
+                                          right: 4,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              "Total : ",
+                                              style: TextStyle(
+                                                color:
+                                                    AppTheme.colors.textMuted,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            Text(
+                                              "${group.total.toStringAsFixed(0)} Ar",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: AppTheme.colors.text,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               },
                             ),

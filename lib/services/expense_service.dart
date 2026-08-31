@@ -5,9 +5,12 @@ import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
+import 'package:gestion_depenses/models/daily_budget_situation.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/models/expense_group.dart';
 import 'package:gestion_depenses/models/option_result.dart';
 import 'package:gestion_depenses/repositories/expense_repository.dart';
+import 'package:gestion_depenses/services/budget_service.dart';
 import 'package:gestion_depenses/services/daily_budget_service.dart';
 
 class ExpenseService {
@@ -37,12 +40,8 @@ class ExpenseService {
       );
     }
 
-    return OperationResult(
-      success: true,
-      message: 'Validation réussie.',
-    );
+    return OperationResult(success: true, message: 'Validation réussie.');
   }
-
 
   static Future<OperationResult> insertExpense(Expense expense) async {
     try {
@@ -64,9 +63,7 @@ class ExpenseService {
             "${DatetimeUtil.formatDate(expense.date)}",
       );
     } catch (e) {
-      debugPrint(
-        "Erreur lors de l'enregistrement de la dépense : $e",
-      );
+      debugPrint("Erreur lors de l'enregistrement de la dépense : $e");
 
       return OperationResult(
         success: false,
@@ -75,15 +72,12 @@ class ExpenseService {
     }
   }
 
-
   static bool _isAmountValid(String amount) {
     if (amount.isEmpty) {
       return false;
     }
 
-    final double? parsed = double.tryParse(
-      amount.replaceAll(',', '.'),
-    );
+    final double? parsed = double.tryParse(amount.replaceAll(',', '.'));
 
     return parsed != null && parsed > 0;
   }
@@ -95,7 +89,6 @@ class ExpenseService {
   static bool _isCategorySelected(CategoryWithLimit? category) {
     return category != null;
   }
-
 
   static Future<List<Expense>> getAllExpenses() async {
     return await ExpenseRepository.getAllExpenses();
@@ -152,10 +145,7 @@ class ExpenseService {
     int? month,
   }) async {
     if (year < 0) {
-      return await ExpenseRepository.getByKeyword(
-        keyword,
-        month: month,
-      );
+      return await ExpenseRepository.getByKeyword(keyword, month: month);
     }
 
     return await ExpenseRepository.getByKeywordAndYear(
@@ -173,16 +163,11 @@ class ExpenseService {
     return await ExpenseRepository.getListYear();
   }
 
-  static Future<double> calculateSumExpenseByDate(
-    DateTime date,
-  ) async {
+  static Future<double> calculateSumExpenseByDate(DateTime date) async {
     return await ExpenseRepository.getExpenseByDate(date);
   }
 
-  static Future<double> getExpenseOfTheMonth(
-    int month,
-    int year,
-  ) async {
+  static Future<double> getExpenseOfTheMonth(int month, int year) async {
     return await ExpenseRepository.getExpenseOfTheMonth(
       DatetimeUtil.formatNumber(month),
       year.toString(),
@@ -194,8 +179,7 @@ class ExpenseService {
   }
 
   static Future<int> deleteExpense(Expense expense) async {
-    final int deletedExpense =
-        await ExpenseRepository.deleteExpense(expense);
+    final int deletedExpense = await ExpenseRepository.deleteExpense(expense);
 
     await _checkDailyBudgetNotification(expense.date);
 
@@ -214,7 +198,9 @@ class ExpenseService {
   }
 
   static Future<void> updateExpense(Expense expense) async {
-    final Expense? oldExpense = await ExpenseRepository.getExpenseById(expense.id!);
+    final Expense? oldExpense = await ExpenseRepository.getExpenseById(
+      expense.id!,
+    );
 
     if (oldExpense == null) {
       throw Exception("La dépense à modifier n'existe pas.");
@@ -233,11 +219,8 @@ class ExpenseService {
     await _checkDailyBudgetNotification(expense.date);
   }
 
-  static Future<DailyBudget> _getRequiredDailyBudget(
-    DateTime date,
-  ) async {
-    final DailyBudget? budget =
-        await DailyBudgetService.getBudgetByDate(date);
+  static Future<DailyBudget> _getRequiredDailyBudget(DateTime date) async {
+    final DailyBudget? budget = await DailyBudgetService.getBudgetByDate(date);
 
     if (budget == null) {
       throw DailyBudgetNotFound(date);
@@ -246,14 +229,13 @@ class ExpenseService {
     return budget;
   }
 
-  static Future<void> _checkDailyBudgetNotification(
-    DateTime date,
-  ) async {
+  static Future<void> _checkDailyBudgetNotification(DateTime date) async {
     try {
-      final double totalExpense =
-          await calculateSumExpenseByDate(date);
+      final double totalExpense = await calculateSumExpenseByDate(date);
 
-      final DailyBudget? budget = await DailyBudgetService.getBudgetByDate(date);
+      final DailyBudget? budget = await DailyBudgetService.getBudgetByDate(
+        date,
+      );
 
       if (budget == null) {
         return;
@@ -270,26 +252,56 @@ class ExpenseService {
                 "fixé le ${DatetimeUtil.formatDate(date)}",
           );
 
-          await DailyBudgetService.changeNotificationState(
-            budget.id!,
-            1,
-          );
+          await DailyBudgetService.changeNotificationState(budget.id!, 1);
         }
       } else {
         if (budget.notificationSent == 1) {
-          await DailyBudgetService.changeNotificationState(budget.id!,0);
+          await DailyBudgetService.changeNotificationState(budget.id!, 0);
         }
       }
     } catch (e) {
-      debugPrint(
-        "Erreur lors de la vérification de la notification : $e",
-      );
+      debugPrint("Erreur lors de la vérification de la notification : $e");
 
       rethrow;
     }
   }
 
-  static Future<List<Expense>> getListExpenseByDate(DateTime date) async{
+  static Future<List<Expense>> getListExpenseByDate(DateTime date) async {
     return await ExpenseRepository.getListExpenseByDate(date);
+  }
+
+  static Future<List<ExpenseGroup>> groupExpensesByDate(
+    List<Expense> expenses,
+  ) async {
+    final Map<String, List<Expense>> grouped = {};
+
+    for (final expense in expenses) {
+      final dateKey = expense.date.toDateString();
+
+      grouped.putIfAbsent(dateKey, () => []);
+      grouped[dateKey]!.add(expense);
+    }
+
+    final List<ExpenseGroup> groups = [];
+
+    for (final entry in grouped.entries) {
+      final DateTime date = DateTime.parse(entry.key);
+
+      DailyBudgetSituation? situation;
+
+      try {
+        situation = await BudgetService.getDailySituation(date);
+      } on DailyBudgetNotFound {
+        situation = null;
+      }
+
+      groups.add(
+        ExpenseGroup(date: date, expenses: entry.value, situation: situation),
+      );
+    }
+
+    groups.sort((a, b) => b.date.compareTo(a.date));
+
+    return groups;
   }
 }
