@@ -603,6 +603,28 @@ class ExpenseRepository {
     }).toList();
   }
 
+  static Future<List<Expense>> getListExpenseByDate(DateTime date) async{
+    final List<Map<String, dynamic>> results = await _database.query(
+      _tableName,
+      where: "strftime('%Y-%m-%d', date) = ?",
+      whereArgs: [date.toDateString()]
+    );
+
+    List<Expense> expenses = [];
+
+    for (var map in results) {
+      Category? category = await CategoryRepository.getCategoryById(
+        map['category_id'],
+      );
+
+      if (category != null) {
+        expenses.add(Expense.fromMap(map, category: category));
+      }
+    }
+
+    return expenses;
+  }
+
   //   static Future<void> testDebugDates() async {
   //   // Sélectionne les dates brutes ainsi que la semaine et l'année calculées par SQLite
   //   String sql = """

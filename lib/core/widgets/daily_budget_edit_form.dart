@@ -9,11 +9,7 @@ class DailyBudgetEditForm extends StatefulWidget {
   final DailyBudget? budget;
   final VoidCallback? onEdited;
 
-  const DailyBudgetEditForm({
-    this.budget,
-    this.onEdited,
-    super.key,
-  });
+  const DailyBudgetEditForm({this.budget, this.onEdited, super.key});
 
   @override
   State<DailyBudgetEditForm> createState() => _DailyBudgetEditFromState();
@@ -57,9 +53,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
       return;
     }
 
-    final budget = double.parse(
-      _budgetController.text.replaceAll(',', '.'),
-    );
+    final budget = double.parse(_budgetController.text.replaceAll(',', '.'));
 
     try {
       if (widget.budget != null) {
@@ -112,11 +106,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
       _selectedDate = widget.budget!.date;
     } else {
       final now = DateTime.now();
-      _selectedDate = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      );
+      _selectedDate = DateTime(now.year, now.month, now.day);
     }
   }
 
@@ -135,12 +125,8 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
 
     return AlertDialog(
       title: Text(
-        widget.budget == null
-            ? "Budget quotidien"
-            : "Modification du budget",
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-        ),
+        widget.budget == null ? "Budget quotidien" : "Modification du budget",
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: Form(
         key: _formKey,
@@ -182,9 +168,7 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
                   return 'Veuillez renseigner votre budget';
                 }
 
-                final budget = double.tryParse(
-                  value.replaceAll(',', '.'),
-                );
+                final budget = double.tryParse(value.replaceAll(',', '.'));
 
                 return _checkValue(budget);
               },
@@ -194,28 +178,29 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
       ),
       actions: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: widget.budget == null
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.spaceBetween,
           children: [
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.colors.danger,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text("Annuler"),
-            ),
-
+            widget.budget != null
+                ? FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.colors.danger,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text("Annuler"),
+                  )
+                : Divider(),
             TextButton.icon(
               onPressed: () async {
                 await _submit(context);
               },
               label: Text(
                 "Définir le budget",
-                style: TextStyle(
-                  color: AppTheme.colors.primarySoft,
-                ),
+                style: TextStyle(color: AppTheme.colors.primarySoft),
               ),
               icon: Icon(
                 Icons.check_circle,

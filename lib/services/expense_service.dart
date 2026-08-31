@@ -288,4 +288,8 @@ class ExpenseService {
       rethrow;
     }
   }
+
+  static Future<List<Expense>> getListExpenseByDate(DateTime date) async{
+    return await ExpenseRepository.getListExpenseByDate(date);
+  }
 }
