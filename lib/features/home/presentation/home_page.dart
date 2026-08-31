@@ -65,8 +65,9 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
+    DateTime today = DateTime.now();
     try {
-      final expenses = await ExpenseService.getExpenseByLimit(10);
+      final expenses = await ExpenseService.getListExpenseByDate(today);
 
       setState(() {
         _expenses.clear();
@@ -316,7 +317,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Aucune dépense enregistrée',
+                              'Aucune dépense enregistrée pour aujourd\'hui',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
