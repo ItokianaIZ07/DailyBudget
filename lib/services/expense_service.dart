@@ -45,11 +45,31 @@ class ExpenseService {
 
   static Future<OperationResult> insertExpense(Expense expense) async {
     try {
-      await _getRequiredDailyBudget(expense.date);
+      final DateTime today = DateTime.now();
 
+      final bool isToday =
+          expense.date.year == today.year &&
+          expense.date.month == today.month &&
+          expense.date.day == today.day;
+
+      // Une dépense d'aujourd'hui nécessite obligatoirement
+      // qu'un budget quotidien ait été fixé.
+      if (isToday) {
+        await _getRequiredDailyBudget(expense.date);
+      }
+
+      // Pour une ancienne date, le budget quotidien n'est pas obligatoire.
       await ExpenseRepository.createExpense(expense);
 
-      await _checkDailyBudgetNotification(expense.date);
+      // Vérification du dépassement uniquement si un budget existe.
+      try {
+        await _checkDailyBudgetNotification(expense.date);
+      } on DailyBudgetNotFound {
+        debugPrint(
+          "Dépense ancienne enregistrée sans budget pour "
+          "${DatetimeUtil.formatDate(expense.date)}",
+        );
+      }
 
       return OperationResult(
         success: true,
@@ -58,9 +78,7 @@ class ExpenseService {
     } on DailyBudgetNotFound {
       return OperationResult(
         success: false,
-        message:
-            "Aucun budget n'a été fixé pour la date "
-            "${DatetimeUtil.formatDate(expense.date)}",
+        message: "Aucun budget n'a été fixé pour aujourd'hui.",
       );
     } catch (e) {
       debugPrint("Erreur lors de l'enregistrement de la dépense : $e");
@@ -90,8 +108,15 @@ class ExpenseService {
     return category != null;
   }
 
-  static Future<List<Expense>> getAllExpenses() async {
-    return await ExpenseRepository.getAllExpenses();
+  // ---------------------------------------------------------------------------
+  // RÉCUPÉRATION DES DÉPENSES
+  // ---------------------------------------------------------------------------
+
+  static Future<List<Expense>> getAllExpenses({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    return await ExpenseRepository.getAllExpenses(limit: limit, offset: offset);
   }
 
   static double sumExpenseAmount(List<Expense> expenses) {
@@ -107,56 +132,86 @@ class ExpenseService {
   static Future<List<Expense>> getByCategory(
     Category? category,
     int year,
-    String? month,
-  ) async {
-    final List<Expense> expenses;
+    String? month, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final int? monthNumber = month == null ? null : int.tryParse(month);
 
-    if (category == null) {
-      expenses = year < 0
-          ? await ExpenseRepository.getAllExpenses()
-          : await ExpenseRepository.getByYear(year);
-    } else {
-      expenses = year < 0
-          ? await ExpenseRepository.getExpensesByCategory(category)
-          : await ExpenseRepository.getExpensesByCategoryAndYear(
-              category,
-              year,
-            );
-    }
-
-    if (month == null) {
-      return expenses;
-    }
-
-    final monthNumber = int.tryParse(month);
-
-    if (monthNumber == null) {
+    if (month != null && monthNumber == null) {
       return [];
     }
 
-    return expenses
-        .where((expense) => expense.date.month == monthNumber)
-        .toList();
+    if (category == null) {
+      if (year < 0) {
+        return await ExpenseRepository.getAllExpenses(
+          limit: limit,
+          offset: offset,
+          month: monthNumber,
+        );
+      }
+
+      return await ExpenseRepository.getByYear(
+        year: year,
+        limit: limit,
+        offset: offset,
+        month: monthNumber,
+      );
+    }
+
+    if (year < 0) {
+      return await ExpenseRepository.getExpensesByCategory(
+        category,
+        limit: limit,
+        offset: offset,
+        month: month,
+      );
+    }
+
+    return await ExpenseRepository.getExpensesByCategoryAndYear(
+      category,
+      year,
+      limit: limit,
+      offset: offset,
+      month: monthNumber,
+    );
   }
 
   static Future<List<Expense>> searchByKeyWord(
     String keyword,
     int year, {
     int? month,
+    int limit = 20,
+    int offset = 0,
   }) async {
     if (year < 0) {
-      return await ExpenseRepository.getByKeyword(keyword, month: month);
+      return await ExpenseRepository.getByKeyword(
+        keyword,
+        month: month,
+        limit: limit,
+        offset: offset,
+      );
     }
 
     return await ExpenseRepository.getByKeywordAndYear(
       keyword,
       year,
       month: month,
+      limit: limit,
+      offset: offset,
     );
   }
 
-  static Future<List<Expense>> getByTransactionYear(int year) async {
-    return await ExpenseRepository.getByYear(year);
+  static Future<List<Expense>> getByTransactionYear(
+    int year, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    return await ExpenseRepository.getByYear(
+      year: year,
+      limit: limit,
+      offset: offset,
+    );
   }
 
   static Future<List<int>> getListYearTransaction() async {
@@ -177,6 +232,10 @@ class ExpenseService {
   static Future<List<Expense>> getExpenseByLimit(int limit) async {
     return await ExpenseRepository.getExpenseByLimit(limit);
   }
+
+  // ---------------------------------------------------------------------------
+  // CRUD
+  // ---------------------------------------------------------------------------
 
   static Future<int> deleteExpense(Expense expense) async {
     final int deletedExpense = await ExpenseRepository.deleteExpense(expense);
@@ -233,15 +292,15 @@ class ExpenseService {
     try {
       final double totalExpense = await calculateSumExpenseByDate(date);
 
-      final DailyBudget? budget = await DailyBudgetService.getBudgetByDate(
-        date,
-      );
+      DailyBudget? budget;
 
-      if (budget == null) {
+      try {
+        budget = await DailyBudgetService.getBudgetByDate(date);
+      } on DailyBudgetNotFound {
         return;
       }
 
-      final double remaining = budget.amount - totalExpense;
+      final double remaining = budget!.amount - totalExpense;
 
       if (remaining < 0) {
         if (budget.notificationSent == 0) {
@@ -265,6 +324,10 @@ class ExpenseService {
       rethrow;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // HISTORIQUE
+  // ---------------------------------------------------------------------------
 
   static Future<List<Expense>> getListExpenseByDate(DateTime date) async {
     return await ExpenseRepository.getListExpenseByDate(date);
