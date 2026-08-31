@@ -45,4 +45,8 @@ class DailyBudgetService {
   static Future<void> changeNotificationState(int id, int state)async{
     await DailyBudgetRepository.changeNotificationState(id, state: state);
   }
+
+  static Future<List<DailyBudget>> getAllPlanifiedBudget({required int limit, required int offset}) async{
+    return await DailyBudgetRepository.getPerStack(limit: limit, offset: offset);
+  }
 }
