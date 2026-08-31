@@ -35,4 +35,8 @@ class MonthlySalaryService {
   static Future<int> deleteSalary(int id) async {
     return await MonthlySalaryRepository.delete(id);
   }
+
+  static Future<List<MonthlySalary>> getAllSalary() async{
+    return await MonthlySalaryRepository.getAll();
+  }
 }

@@ -63,4 +63,17 @@ class DailyBudgetRepository {
     String sql = "UPDATE $_tableName SET notification_sent=? WHERE id = ?";
     await _database.execute(sql, [state, dailBudgetId]);
   }
+
+  static Future<List<DailyBudget>> getPerStack({required int limit, required int offset}) async{
+    final List<Map<String, dynamic>> results =  await _database.query(
+      _tableName,
+      orderBy: "date DESC",
+      limit: limit,
+      offset: offset
+    );
+
+    return results.map((item){
+      return DailyBudget.fromMap(item);
+    }).toList();
+  }
 }

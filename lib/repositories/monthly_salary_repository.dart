@@ -46,4 +46,15 @@ class MonthlySalaryRepository {
       whereArgs: [id],
     );
   }
+  
+  static Future<List<MonthlySalary>> getAll() async{
+    final List<Map<String, dynamic>> results =  await _database.query(
+      _tableName,
+      orderBy: "id DESC"
+    );
+
+    return results.map((item){
+      return MonthlySalary.fromMap(item);
+    }).toList();
+  }
 }
