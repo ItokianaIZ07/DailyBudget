@@ -9,7 +9,11 @@ class DailyBudgetEditForm extends StatefulWidget {
   final DailyBudget? budget;
   final VoidCallback? onEdited;
 
-  const DailyBudgetEditForm({this.budget, this.onEdited, super.key});
+  const DailyBudgetEditForm({
+    this.budget,
+    this.onEdited,
+    super.key
+  });
 
   @override
   State<DailyBudgetEditForm> createState() => _DailyBudgetEditFromState();
