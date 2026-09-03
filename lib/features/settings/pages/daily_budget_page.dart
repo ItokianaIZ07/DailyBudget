@@ -117,7 +117,13 @@ class _DailyBudgetPageState extends State<DailyBudgetPage> {
     await showDialog(
       context: context,
       builder: (context) {
-        return DailyBudgetEditForm(budget: _budget, onEdited: _loadTodayBudget);
+        return DailyBudgetEditForm(
+          budget: _budget,
+          onEdited: () async {
+            await _loadTodayBudget();
+            await _loadBudgets();
+          },
+        );
       },
     );
   }
