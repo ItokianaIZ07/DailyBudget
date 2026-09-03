@@ -48,7 +48,7 @@ class DailyBudgetRepository {
   }
 
   static Future<double> getSumBudgetByPeriod(int month, int year) async {
-    String sql = "SELECT COALESCE(SUM(amount), 0.0) as total FROM $_tableName WHERE strftime('m',date) = ? AND strftime('Y', date) = ?";
+    String sql = "SELECT COALESCE(SUM(amount), 0.0) as total FROM $_tableName WHERE strftime('%m',date) = ? AND strftime('%Y', date) = ?";
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [DatetimeUtil.formatNumber(month), year.toString()]);
     double total = 0;
     

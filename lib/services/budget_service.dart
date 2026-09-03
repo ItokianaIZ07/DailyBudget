@@ -52,7 +52,7 @@ class BudgetService {
       month,
       year,
     );
-    double availableBudget = monthlySalary.amount - realExpenseOfTHeMonth;
+    double availableBudget = monthlySalary.amount - sumBudgetPlanified;
     double realRemainingMoney = monthlySalary.amount - realExpenseOfTHeMonth;
 
     return MonthlyBudgetSituation(

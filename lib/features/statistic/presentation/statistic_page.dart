@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/features/statistic/widget/category_budget_progress_card.dart';
+import 'package:gestion_depenses/features/statistic/presentation/financial_detail_page.dart';
 import 'package:gestion_depenses/models/expense_category.dart';
 import 'package:gestion_depenses/services/statistic_service.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
@@ -127,6 +128,26 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FinancialDetailPage()),
+              );
+            },
+            icon: Icon(
+              Icons.account_balance_wallet_outlined,
+              color: AppTheme.colors.primary,
+            ),
+            label: Text(
+              'Détails financiers',
+              style: TextStyle(
+                color: AppTheme.colors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -176,7 +197,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: _previousPercentage > 0
+                            color: _previousPercentage < 0
                                 ? AppTheme.colors.successSoft
                                 : AppTheme.colors.dangerSoft,
                             borderRadius: BorderRadius.circular(12),
@@ -188,10 +209,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
                               Text(
                                 "${_previousPercentage > 0 ? "+" : ""}${_previousPercentage.toStringAsFixed(2)} %",
                                 style: TextStyle(
-                                  color: _previousPercentage > 0
+                                  color: _previousPercentage < 0
                                       ? AppTheme.colors.success
                                       : _previousPercentage == 0
-                                      ? AppTheme.colors.primary.withValues(alpha: 0.75) 
+                                      ? AppTheme.colors.primary.withValues(
+                                          alpha: 0.75,
+                                        )
                                       : AppTheme.colors.danger,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -290,7 +313,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
                       const SizedBox(width: 8),
                       Text(
-                        _selectedPeriod == 0 ? "Semaine actuelle" : _selectedPeriod == 1 ? "Mois actuel": "Année actuelle",
+                        _selectedPeriod == 0
+                            ? "Semaine actuelle"
+                            : _selectedPeriod == 1
+                            ? "Mois actuel"
+                            : "Année actuelle",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -312,7 +339,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
                       const SizedBox(width: 8),
                       Text(
-                        _selectedPeriod == 0 ? "Semaine précedente" : _selectedPeriod == 1 ? "Mois précedent": "Année précedente",
+                        _selectedPeriod == 0
+                            ? "Semaine précedente"
+                            : _selectedPeriod == 1
+                            ? "Mois précedent"
+                            : "Année précedente",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -331,7 +362,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 final expense = _expensesCategory[index];
-                return CategoryBudgetProgressCard(expense: expense, period: _selectedPeriod,);
+                return CategoryBudgetProgressCard(
+                  expense: expense,
+                  period: _selectedPeriod,
+                );
               },
             ),
           ],
