@@ -41,8 +41,10 @@ class _DailyBudgetEditFromState extends State<DailyBudgetEditForm> {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      // firstDate: DateTime(2000),
+      // lastDate: DateTime(2100),
+      firstDate: _selectedDate,
+      lastDate: _selectedDate
     );
 
     if (pickedDate != null) {

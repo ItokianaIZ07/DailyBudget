@@ -184,13 +184,21 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _formatAr.format(_totalExpense),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            _formatAr.format(_totalExpense),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+
+                        const SizedBox(
+                          width: 8,
+                        ), 
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
