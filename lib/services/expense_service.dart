@@ -325,6 +325,16 @@ class ExpenseService {
     }
   }
 
+  // static Future<void> _checkDailyNoExpense() async{
+  //   DateTime now = DateTime.now();
+  //   if(now.hour == 17){
+  //     double expense = await ExpenseRepository.getExpenseByDate(now);
+  //     if(expense == 0){ // mbol tsisy dépense izy eto
+  //       // notifier l'utilisateur
+  //     }
+  //   }
+  // }
+
   // ---------------------------------------------------------------------------
   // HISTORIQUE
   // ---------------------------------------------------------------------------
