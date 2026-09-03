@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/services/notification_service.dart';
+import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
+import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/daily_budget.dart';
 import 'package:gestion_depenses/models/daily_budget_situation.dart';
 import 'package:gestion_depenses/models/expense.dart';
 import 'package:gestion_depenses/models/expense_group.dart';
+import 'package:gestion_depenses/models/monthly_budget_situation.dart';
 import 'package:gestion_depenses/models/option_result.dart';
 import 'package:gestion_depenses/repositories/expense_repository.dart';
 import 'package:gestion_depenses/services/budget_service.dart';
@@ -70,6 +73,7 @@ class ExpenseService {
           "${DatetimeUtil.formatDate(expense.date)}",
         );
       }
+      await _checkMonthlyExpenseLimit();
 
       return OperationResult(
         success: true,
@@ -276,6 +280,7 @@ class ExpenseService {
     }
 
     await _checkDailyBudgetNotification(expense.date);
+    await _checkMonthlyExpenseLimit();
   }
 
   static Future<DailyBudget> _getRequiredDailyBudget(DateTime date) async {
@@ -322,6 +327,45 @@ class ExpenseService {
       debugPrint("Erreur lors de la vérification de la notification : $e");
 
       rethrow;
+    }
+  }
+
+  static Future<void> _checkMonthlyExpenseLimit() async {
+    int month = DatetimeUtil.getNowMonth();
+    int year = DatetimeUtil.getNowYear();
+
+    try {
+      MonthlyBudgetSituation monthSituation =
+          await BudgetService.getMonthlySituation(month, year);
+
+      if (monthSituation.spent >= monthSituation.salary * 0.8 &&
+          monthSituation.spent < monthSituation.salary * 0.9) {
+        await NotificationService.instance.showNotification(
+          title: "SpendWise Alert",
+          body:
+              "Attention ! Vous avez déjà dépensé 80 % de votre salaire mensuel.",
+        );
+      }
+      else if (monthSituation.spent >= monthSituation.salary * 0.9 &&
+          monthSituation.spent < monthSituation.salary) {
+        await NotificationService.instance.showNotification(
+          title: "SpendWise Alert",
+          body:
+              "Attention ! Vous avez déjà dépensé 90 % de votre salaire mensuel.",
+        );
+      }
+      // Salaire dépassé.
+      else if (monthSituation.spent > monthSituation.salary) {
+        await NotificationService.instance.showNotification(
+          title: "SpendWise Alert",
+          body:
+              "Attention ! Vos dépenses réelles de ce mois ont dépassé "
+              "votre salaire de "
+              "${CurrencyUtil.getFormater().format(monthSituation.salary)}.",
+        );
+      }
+    } on MonthlySalaryNotFoundException {
+      return;
     }
   }
 

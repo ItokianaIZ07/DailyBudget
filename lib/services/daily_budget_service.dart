@@ -92,19 +92,19 @@ class DailyBudgetService {
               "votre salaire de "
               "${CurrencyUtil.getFormater().format(monthSituation.salary)}.",
         );
-      } else if (monthSituation.spent >= monthSituation.salary * 0.8 &&
-          monthSituation.spent < monthSituation.salary * 0.9) {
+      } else if (monthSituation.plannedBudget >= monthSituation.salary * 0.8 &&
+          monthSituation.plannedBudget < monthSituation.salary * 0.9) {
         await NotificationService.instance.showNotification(
           title: "SpendWise Alert",
           body:
-              "Attention ! Vous avez déjà consommé 80 % de votre salaire mensuel.",
+              "Attention ! Vous avez déjà planifié 80 % de votre salaire mensuel.",
         );
-      } else if (monthSituation.spent >= monthSituation.salary * 0.9 &&
-          monthSituation.spent < monthSituation.salary) {
+      } else if (monthSituation.plannedBudget >= monthSituation.salary * 0.9 &&
+          monthSituation.plannedBudget < monthSituation.salary) {
         await NotificationService.instance.showNotification(
           title: "SpendWise Alert",
           body:
-              "Attention ! Vous avez déjà consommé 90 % de votre salaire mensuel.",
+              "Attention ! Vous avez déjà planifié 90 % de votre salaire mensuel.",
         );
       }
     } on MonthlySalaryNotFoundException {
