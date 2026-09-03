@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
-import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/exception/daily_budget_not_found.dart';
+// import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/exception/monthly_salary_not_found_exception.dart';
+import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
+import 'package:gestion_depenses/features/home/widgets/budget_stat_card.dart';
 import 'package:gestion_depenses/features/home/widgets/home_page_header.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
-import 'package:gestion_depenses/features/home/widgets/stat_card.dart';
+import 'package:gestion_depenses/features/home/widgets/salary_form.dart';
+// import 'package:gestion_depenses/features/home/widgets/stat_card.dart';
+import 'package:gestion_depenses/models/category.dart';
+import 'package:gestion_depenses/models/daily_budget_situation.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/models/monthly_budget_situation.dart';
+import 'package:gestion_depenses/models/monthly_salary.dart';
+import 'package:gestion_depenses/services/budget_service.dart';
+import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
+import 'package:gestion_depenses/services/monthly_salary_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final VoidCallback onNavigateToExpense;
+  const HomePage({required this.onNavigateToExpense, super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,20 +32,42 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   String date = "";
 
-  final _formatAr = CurrencyUtil.getFormater();
+  // final _formatAr = CurrencyUtil.getFormater();
 
   final List<Expense> _expenses = [];
 
   final GlobalKey<AnimatedListState> _expenseListKey =
       GlobalKey<AnimatedListState>();
 
+  final List<Category> _categories = [];
+
+  MonthlyBudgetSituation? _monthlySituation;
+
+  DailyBudgetSituation? _situation;
+  String _message = "";
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await CategoryService.getAllCategories();
+      setState(() {
+        _categories.clear();
+        _categories.addAll(categories);
+      });
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors du chargement des catégories: $e",
+      );
+    }
+  }
+
   Future<void> _loadExpenses() async {
     setState(() {
       _isLoading = true;
     });
 
+    DateTime today = DateTime.now();
     try {
-      final expenses = await ExpenseService.getAllExpenses();
+      final expenses = await ExpenseService.getListExpenseByDate(today);
 
       setState(() {
         _expenses.clear();
@@ -62,13 +97,7 @@ class _HomePageState extends State<HomePage> {
           opacity: animation,
           child: SizeTransition(
             sizeFactor: animation,
-            child: ExpenseCard(
-              description: removedExpense.description,
-              amount: removedExpense.amount,
-              category: removedExpense.category.name,
-              date: removedExpense.date,
-              onDelete: () {},
-            ),
+            child: ExpenseCard(expense: removedExpense, onDelete: () {}),
           ),
         );
       }, duration: const Duration(milliseconds: 300));
@@ -87,17 +116,104 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showEditModal(BuildContext context, Expense expense) async {
+    final bool? modified = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return EditModal(categories: _categories, expense: expense);
+      },
+    );
+
+    if (modified == true) {
+      await _loadExpenses();
+    }
+  }
+
+  Future<void> _checkMonthlySalary() async {
+    int month = DatetimeUtil.getNowMonth();
+    int year = DatetimeUtil.getNowYear();
+
+    try {
+      final situation = await BudgetService.getMonthlySituation(month, year);
+
+      if (!mounted) return;
+
+      setState(() {
+        _monthlySituation = situation;
+      });
+    } on MonthlySalaryNotFoundException {
+      if (!mounted) return;
+
+      final double? salary = await showDialog<double>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return const SalaryForm();
+        },
+      );
+
+      if (!mounted) return;
+
+      if (salary != null) {
+        final MonthlySalary monthlySalary = MonthlySalary(
+          month: month,
+          year: year,
+          amount: salary,
+        );
+
+        await MonthlySalaryService.saveSalary(monthlySalary);
+
+        if (!mounted) return;
+
+        final situation = await BudgetService.getMonthlySituation(month, year);
+
+        if (!mounted) return;
+
+        setState(() {
+          _monthlySituation = situation;
+        });
+      }
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors de la vérification de la situation du mois : $e",
+      );
+    }
+  }
+
+  Future<void> _loadDailySituation() async {
+    DateTime today = DateTime.now();
+    try {
+      final situation = await BudgetService.getDailySituation(today);
+      setState(() {
+        _situation = situation;
+      });
+    } on DailyBudgetNotFound catch (e) {
+      setState(() {
+        _message = "$e";
+      });
+    } catch (e) {
+      debugPrint(
+        "Une erreur est survenue lors de la recuperation de la situation du budget quotidien dans la page home: $e",
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
+    _checkMonthlySalary();
+
     _initDate();
     _loadExpenses();
+    _loadCategories();
+    _loadDailySituation();
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalDepense = ExpenseService.sumExpenseAmount(_expenses);
+    // final totalDepense = ExpenseService.sumExpenseAmount(_expenses);
 
     return Scaffold(
       backgroundColor: AppTheme.colors.background,
@@ -113,51 +229,56 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    HomePageHeader(title: "Bienvenue", date: date),
+                    HomePageHeader(
+                      title: "Bonjour",
+                      date: date,
+                      montlySituation: _monthlySituation,
+                    ),
                     const SizedBox(height: 20),
-                    Text(
-                      'Vue d’ensemble',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.colors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 170,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.zero,
-                        children: [
-                          SizedBox(
-                            width: 230,
-                            child: StatCard(
-                              title: 'Dépenses totales',
-                              mainContent: _formatAr.format(totalDepense),
-                              icon: Icons.payments_outlined,
-                              accentColor: AppTheme.colors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          SizedBox(
-                            width: 180,
-                            child: StatCard(
-                              title: 'Transactions',
-                              mainContent: _expenses.length.toString(),
-                              icon: Icons.receipt_long_outlined,
-                              accentColor: AppTheme.colors.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Text(
+                    //   'Vue d’ensemble',
+                    //   style: TextStyle(
+                    //     fontSize: 18,
+                    //     fontWeight: FontWeight.w700,
+                    //     color: AppTheme.colors.text,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 14),
+                    // SizedBox(
+                    //   height: 170,
+                    //   child: ListView(
+                    //     scrollDirection: Axis.horizontal,
+                    //     padding: EdgeInsets.zero,
+                    //     children: [
+                    //       SizedBox(
+                    //         width: 230,
+                    //         child: StatCard(
+                    //           title: 'Dépenses totales',
+                    //           mainContent: _formatAr.format(totalDepense),
+                    //           icon: Icons.payments_outlined,
+                    //           accentColor: AppTheme.colors.primary,
+                    //         ),
+                    //       ),
+                    //       const SizedBox(width: 12),
+                    //       SizedBox(
+                    //         width: 180,
+                    //         child: StatCard(
+                    //           title: 'Transactions',
+                    //           mainContent: _expenses.length.toString(),
+                    //           icon: Icons.receipt_long_outlined,
+                    //           accentColor: AppTheme.colors.secondary,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    BudgetStatCard(situation: _situation, message: _message),
                     const SizedBox(height: 22),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Dernières dépenses',
+                          "Dépenses d'ajourd'hui",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -182,7 +303,9 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: AppTheme.colors.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radius.lg),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius.lg,
+                          ),
                           border: Border.all(color: AppTheme.colors.border),
                         ),
                         child: Column(
@@ -194,7 +317,8 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Aucune dépense enregistrée',
+                              'Aucune dépense enregistrée pour aujourd\'hui',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -219,34 +343,50 @@ class _HomePageState extends State<HomePage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         initialItemCount: _expenses.length,
-                        itemBuilder: (
-                          BuildContext context,
-                          int index,
-                          Animation<double> animation,
-                        ) {
-                          final expense = _expenses[index];
+                        itemBuilder:
+                            (
+                              BuildContext context,
+                              int index,
+                              Animation<double> animation,
+                            ) {
+                              final expense = _expenses[index];
 
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SizeTransition(
-                              sizeFactor: animation,
-                              child: ExpenseCard(
-                                description: expense.description,
-                                amount: expense.amount,
-                                category: expense.category.name,
-                                date: expense.date,
-                                onDelete: () async {
-                                  await _deleteExpense(expense, index);
-                                },
-                              ),
-                            ),
-                          );
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SizeTransition(
+                                  sizeFactor: animation,
+                                  child: ExpenseCard(
+                                    expense: expense,
+                                    onDelete: () async {
+                                      await _deleteExpense(expense, index);
+                                      await _loadDailySituation();
+                                    },
+                                    onEdit: () async {
+                                      await _showEditModal(context, expense);
+                                      await _loadExpenses();
+                                      await _loadDailySituation();
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                       ),
                   ],
                 ),
               ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: AppTheme.colors.primary,
+      //   foregroundColor: AppTheme.colors.primarySoft,
+      //   onPressed: () async {
+      //     // widget.onNavigateToExpense.call();
+      //     await NotificationService.instance.showNotification(
+      //       title: "SpendWise",
+      //       body: "Test de notification",
+      //     );
+      //   },
+      //   child: Icon(Icons.add),
+      // ),
     );
   }
 }

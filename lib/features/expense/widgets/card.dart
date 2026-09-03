@@ -2,22 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/currency_util.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
+import 'package:gestion_depenses/models/expense.dart';
 
 class ExpenseCard extends StatelessWidget {
-  final String description;
-  final double amount;
-  final String category;
-  final DateTime date;
+  // final String description;
+  // final double amount;
+  // final String category;
+  // final DateTime date;
   final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final Expense expense;
 
   final _formatAr = CurrencyUtil.getFormater();
 
   ExpenseCard({
-    required this.description,
-    required this.amount,
-    required this.category,
+    // required this.description,
+    // required this.amount,
+    // required this.category,
+    // required this.date,
+    required this.expense,
     required this.onDelete,
-    required this.date,
+    this.onEdit,
     super.key,
   });
 
@@ -69,7 +74,7 @@ class ExpenseCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    description,
+                    expense.description,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -82,7 +87,7 @@ class ExpenseCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    "$category.${DatetimeUtil.formatDate(date)}",
+                    "${expense.category.name.substring(0, (expense.category.name.length / 2).toInt() +1)}.${DatetimeUtil.formatDate(expense.date)}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -101,7 +106,7 @@ class ExpenseCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _formatAr.format(amount),
+                  _formatAr.format(expense.amount),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -110,7 +115,14 @@ class ExpenseCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  color: AppTheme.colors.secondary,
+                  tooltip: "Modifier",
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: onEdit,
+                ),
                 IconButton(
                   onPressed: ()async {
                     await _confirmDelete(context);

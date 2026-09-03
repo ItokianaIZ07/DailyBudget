@@ -49,7 +49,13 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      HomePage(),
+      HomePage(
+        onNavigateToExpense: (){
+          setState(() {
+            _currentIndex = 1;
+          });
+        },
+      ),
       ExpensePage(),
       HistoryPage(selectedYear: _selectedYear),
       StatisticsPage(),

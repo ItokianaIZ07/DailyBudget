@@ -5,12 +5,12 @@ import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/services/category_service.dart';
 
 class SortWidget extends StatefulWidget {
-  Category? selectedCategory;
+  final Category? selectedCategory;
   final ValueChanged<Category?> onCategorySelected;
-  int selectedYear;
+  final int selectedYear;
   final Function(String)? onSearch;
 
-  SortWidget({
+  const SortWidget({
     required this.selectedCategory,
     required this.onCategorySelected,
     required this.onSearch,
@@ -23,7 +23,7 @@ class SortWidget extends StatefulWidget {
 }
 
 class _SortWidgetState extends State<SortWidget> {
-  List<Category> _categories = [];
+  final List<Category> _categories = [];
   late final TextEditingController _editingController;
 
   Future<void> _loadCategories() async {
