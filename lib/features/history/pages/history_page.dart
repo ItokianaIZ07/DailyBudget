@@ -1,16 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-
 import 'package:gestion_depenses/core/themes/app_theme.dart';
-
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/expense/widgets/card.dart';
+import 'package:gestion_depenses/features/history/widgets/budget_info_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/sort_widget.dart';
 import 'package:gestion_depenses/features/history/widgets/total_widget.dart';
 import 'package:gestion_depenses/features/expense/widgets/edit_modal.dart';
-
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
+import 'package:gestion_depenses/models/expense_group.dart';
 import 'package:gestion_depenses/models/month.dart';
-
 import 'package:gestion_depenses/services/category_service.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 import 'package:gestion_depenses/services/history_service.dart';
@@ -25,10 +25,10 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-
   final List<Expense> _expenses = [];
   final List<Month> _months = [];
   final List<Category> _categories = [];
+  final List<ExpenseGroup> _expenseGroups = [];
 
   Category? _selectedCategory;
   Month? _selectedMonth;
@@ -36,38 +36,86 @@ class _HistoryPageState extends State<HistoryPage> {
   double _totalExpense = 0;
 
   bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
 
-  Future<void> _loadExpenses() async {
-    setState(() {
-      _isLoading = true;
-    });
+  int _offset = 0;
+
+  static const int _pageSize = 20;
+
+  final ScrollController _scrollController = ScrollController();
+
+  Timer? _searchDebounce;
+
+  Future<void> _loadExpenses({bool reset = true}) async {
+    if (_isLoadingMore) return;
+
+    if (reset) {
+      setState(() {
+        _isLoading = true;
+        _offset = 0;
+        _hasMore = true;
+        _expenses.clear();
+        _expenseGroups.clear();
+      });
+    } else {
+      if (!_hasMore) return;
+
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
 
     try {
-      final expenses = await ExpenseService.getByCategory(
+      final List<Expense> expenses = await ExpenseService.getByCategory(
         _selectedCategory,
         widget.selectedYear,
         _selectedMonth?.value,
+        limit: _pageSize,
+        offset: _offset,
       );
 
       if (!mounted) return;
 
       setState(() {
-        _expenses
-          ..clear()
-          ..addAll(expenses);
+        _expenses.addAll(expenses);
+
+        _offset += expenses.length;
+
+        if (expenses.length < _pageSize) {
+          _hasMore = false;
+        }
 
         _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
+      });
+
+      final groups = await ExpenseService.groupExpensesByDate(_expenses);
+
+      if (!mounted) return;
+
+      setState(() {
+        _expenseGroups
+          ..clear()
+          ..addAll(groups);
       });
     } catch (e) {
       debugPrint('Erreur chargement des dépenses : $e');
     } finally {
-      // ignore: control_flow_in_finally
       if (!mounted) return;
 
       setState(() {
         _isLoading = false;
+        _isLoadingMore = false;
       });
     }
+  }
+
+  Future<void> _loadMoreExpenses() async {
+    if (!_hasMore || _isLoadingMore || _isLoading) {
+      return;
+    }
+
+    await _loadExpenses(reset: false);
   }
 
   Future<void> _loadExpensesByKeyword(String keyword) async {
@@ -85,23 +133,52 @@ class _HistoryPageState extends State<HistoryPage> {
         month = int.parse(_selectedMonth!.value!);
       }
 
-      final expenses = await ExpenseService.searchByKeyWord(
+      setState(() {
+        _isLoading = true;
+        _expenses.clear();
+        _expenseGroups.clear();
+        _offset = 0;
+        _hasMore = true;
+      });
+
+      final List<Expense> expenses = await ExpenseService.searchByKeyWord(
         search,
         widget.selectedYear,
         month: month,
+        limit: _pageSize,
+        offset: _offset,
       );
 
       if (!mounted) return;
+
+      final groups = await ExpenseService.groupExpensesByDate(expenses);
 
       setState(() {
         _expenses
           ..clear()
           ..addAll(expenses);
 
+        _expenseGroups
+          ..clear()
+          ..addAll(groups);
+
+        _offset = expenses.length;
+
+        if (expenses.length < _pageSize) {
+          _hasMore = false;
+        }
+
         _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
     } catch (e) {
       debugPrint('Une erreur est survenue lors de la recherche : $e');
+    } finally {
+      // ignore: control_flow_in_finally
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -111,8 +188,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
       if (!mounted) return;
 
+      _expenses.removeWhere((item) => item.id == expense.id);
+
+      final groups = await ExpenseService.groupExpensesByDate(_expenses);
+
       setState(() {
-        _expenses.removeWhere((item) => item.id == expense.id);
+        _expenseGroups
+          ..clear()
+          ..addAll(groups);
 
         _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
@@ -188,6 +271,13 @@ class _HistoryPageState extends State<HistoryPage> {
   void initState() {
     super.initState();
 
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 300) {
+        _loadMoreExpenses();
+      }
+    });
+
     _refreshScreen();
     _loadCategories();
   }
@@ -203,163 +293,503 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.colors.background,
 
       body: SafeArea(
-        child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: AppTheme.colors.primary,
-                ),
-              )
-            : Column(
-                children: [
-                  Container(
-                    height: 128,
-                    padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            Container(
+              height: 128,
+              padding: const EdgeInsets.all(8),
 
-                    child: SortWidget(
-                      selectedCategory: _selectedCategory,
-                      selectedYear: widget.selectedYear,
+              child: SortWidget(
+                selectedCategory: _selectedCategory,
+                selectedYear: widget.selectedYear,
 
-                      onCategorySelected: (category) async {
-                        setState(() {
-                          _selectedCategory = category;
-                        });
+                onCategorySelected: (category) async {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
 
-                        await _loadExpenses();
-                      },
+                  await _loadExpenses();
+                },
 
-                      onSearch: (keyword) async {
-                        setState(() {
-                          _selectedCategory = null;
-                        });
-                        await _loadExpensesByKeyword(keyword);
-                      },
-                    ),
+                onSearch: (keyword) {
+                  _searchDebounce?.cancel();
+
+                  _searchDebounce = Timer(
+                    const Duration(milliseconds: 400),
+                    () async {
+                      if (!mounted) return;
+
+                      setState(() {
+                        _selectedCategory = null;
+                      });
+
+                      await _loadExpensesByKeyword(keyword);
+                    },
+                  );
+                },
+              ),
+            ),
+
+            // FILTRE MOIS
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.radius.sm),
+
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+
+              child: DropdownButtonHideUnderline(
+                child: DropdownButtonFormField<Month>(
+                  isExpanded: true,
+
+                  initialValue: _selectedMonth,
+
+                  icon: const Icon(Icons.keyboard_arrow_down),
+
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
                   ),
 
-                  // FILTRE MOIS
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                  items: _months.map<DropdownMenuItem<Month>>((month) {
+                    return DropdownMenuItem<Month>(
+                      value: month,
 
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppTheme.radius.sm),
-
-                      border: Border.all(color: Colors.blue.shade100),
-                    ),
-
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButtonFormField<Month>(
-                        isExpanded: true,
-
-                        initialValue: _selectedMonth,
-
-                        icon: const Icon(Icons.keyboard_arrow_down),
-
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                        ),
-
-                        items: _months.map<DropdownMenuItem<Month>>((month) {
-                          return DropdownMenuItem<Month>(
-                            value: month,
-
-                            child: Row(
-                              children: [
-                                const Icon(Icons.calendar_month),
-
-                                const SizedBox(width: 16),
-
-                                Text(
-                                  month.label,
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-
-                        onChanged: (value) async {
-                          setState(() {
-                            _selectedMonth = value;
-                          });
-
-                          await _loadExpenses();
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
+                      child: Row(
                         children: [
-                          TotalWidget(
-                            totalExpense: _totalExpense,
-                            selectedMonth: _selectedMonth,
-                            selectedYear: widget.selectedYear,
+                          const Icon(Icons.calendar_month),
+
+                          const SizedBox(width: 16),
+
+                          Text(
+                            month.label,
+                            style: const TextStyle(fontSize: 16),
                           ),
-
-                          const SizedBox(height: 16),
-
-                          if (_expenses.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(24),
-
-                              child: Text(
-                                "Aucune dépense trouvée pour ces critères",
-
-                                textAlign: TextAlign.center,
-
-                                style: TextStyle(
-                                  color: AppTheme.colors.textMuted,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            )
-                          else
-                            ListView.builder(
-                              shrinkWrap: true,
-
-                              physics: const NeverScrollableScrollPhysics(),
-
-                              itemCount: _expenses.length,
-
-                              padding: const EdgeInsets.only(
-                                bottom: 8,
-                                left: 8,
-                                right: 8,
-                              ),
-
-                              itemBuilder: (context, index) {
-                                final expense = _expenses[index];
-
-                                return ExpenseCard(
-                                  expense: expense,
-                                  onDelete: () async {
-                                    await _deleteExpense(expense);
-                                  },
-                                  onEdit: () async {
-                                    await _showEditModal(context, expense);
-                                  },
-                                );
-                              },
-                            ),
                         ],
                       ),
-                    ),
-                  ),
-                ],
+                    );
+                  }).toList(),
+
+                  onChanged: (value) async {
+                    setState(() {
+                      _selectedMonth = value;
+                    });
+
+                    await _loadExpenses();
+                  },
+                ),
               ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => _loadExpenses(),
+
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+
+                  physics: const AlwaysScrollableScrollPhysics(),
+
+                  child: Column(
+                    children: [
+                      TotalWidget(
+                        totalExpense: _totalExpense,
+                        selectedMonth: _selectedMonth,
+                        selectedYear: widget.selectedYear,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // CHARGEMENT INITIAL
+                      if (_isLoading && _expenses.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: CircularProgressIndicator(
+                            color: AppTheme.colors.primary,
+                          ),
+                        )
+                      // AUCUNE DÉPENSE
+                      else if (_expenses.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+
+                          child: Text(
+                            "Aucune dépense trouvée pour ces critères",
+
+                            textAlign: TextAlign.center,
+
+                            style: TextStyle(
+                              color: AppTheme.colors.textMuted,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        )
+                      // LISTE DES DÉPENSES
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+
+                          itemCount: _expenseGroups.length,
+
+                          padding: const EdgeInsets.only(
+                            bottom: 8,
+                            left: 8,
+                            right: 8,
+                          ),
+
+                          itemBuilder: (context, index) {
+                            final group = _expenseGroups[index];
+                            final situation = group.situation;
+
+                            final bool isOverBudget =
+                                situation != null && situation.remaining < 0;
+
+                            final double progress = situation == null
+                                ? 0
+                                : (situation.percentage / 100).clamp(0.0, 1.0);
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 20),
+
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+
+                                children: [
+                                  // ─────────────────────────────
+                                  // DATE
+                                  // ─────────────────────────────
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.colors.primary
+                                                .withValues(alpha: 0.1),
+
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+
+                                          child: Icon(
+                                            Icons.calendar_today_rounded,
+                                            size: 18,
+                                            color: AppTheme.colors.primary,
+                                          ),
+                                        ),
+
+                                        const SizedBox(width: 10),
+
+                                        Text(
+                                          DatetimeUtil.formatDate(group.date),
+
+                                          style: const TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+
+                                        const Spacer(),
+
+                                        Text(
+                                          '${group.expenses.length} '
+                                          '${group.expenses.length > 1 ? "dépenses" : "dépense"}',
+
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.colors.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  // ─────────────────────────────
+                                  // SITUATION DU BUDGET
+                                  // ─────────────────────────────
+                                  if (situation != null)
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 10),
+
+                                      padding: const EdgeInsets.all(14),
+
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.colors.surface,
+
+                                        borderRadius: BorderRadius.circular(
+                                          AppTheme.radius.sm,
+                                        ),
+
+                                        border: Border.all(
+                                          color: isOverBudget
+                                              ? AppTheme.colors.danger
+                                                    .withValues(alpha: 0.35)
+                                              : AppTheme.colors.border,
+                                        ),
+                                      ),
+
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+
+                                        children: [
+                                          // En-tête
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                isOverBudget
+                                                    ? Icons
+                                                          .warning_amber_rounded
+                                                    : Icons
+                                                          .account_balance_wallet_outlined,
+
+                                                size: 19,
+
+                                                color: isOverBudget
+                                                    ? AppTheme.colors.danger
+                                                    : AppTheme.colors.primary,
+                                              ),
+
+                                              const SizedBox(width: 8),
+
+                                              Text(
+                                                isOverBudget
+                                                    ? "Budget dépassé"
+                                                    : "Situation du budget",
+
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+
+                                                  color: isOverBudget
+                                                      ? AppTheme.colors.danger
+                                                      : AppTheme.colors.text,
+                                                ),
+                                              ),
+
+                                              const Spacer(),
+
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+
+                                                decoration: BoxDecoration(
+                                                  color: isOverBudget
+                                                      ? AppTheme.colors.danger
+                                                            .withValues(
+                                                              alpha: 0.1,
+                                                            )
+                                                      : AppTheme.colors.primary
+                                                            .withValues(
+                                                              alpha: 0.1,
+                                                            ),
+
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+
+                                                child: Text(
+                                                  '${situation.percentage.toStringAsFixed(0)} %',
+
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+
+                                                    color: isOverBudget
+                                                        ? AppTheme.colors.danger
+                                                        : AppTheme
+                                                              .colors
+                                                              .primary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 14),
+
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: BudgetInfoWidget(
+                                                  label: "Budget",
+                                                  value:
+                                                      "${situation.budget.toStringAsFixed(0)} Ar",
+                                                ),
+                                              ),
+
+                                              Expanded(
+                                                child: BudgetInfoWidget(
+                                                  label: "Dépensé",
+                                                  value:
+                                                      "${situation.spent.toStringAsFixed(0)} Ar",
+                                                  valueColor:
+                                                      AppTheme.colors.danger,
+                                                ),
+                                              ),
+
+                                              Expanded(
+                                                child: BudgetInfoWidget(
+                                                  label: isOverBudget
+                                                      ? "Dépassement"
+                                                      : "Reste",
+                                                  value:
+                                                      "${situation.remaining.abs().toStringAsFixed(0)} Ar",
+                                                  valueColor: isOverBudget
+                                                      ? AppTheme.colors.danger
+                                                      : AppTheme.colors.success,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 14),
+
+                                          // Barre de progression
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+
+                                            child: LinearProgressIndicator(
+                                              minHeight: 7,
+
+                                              value: progress,
+
+                                              backgroundColor: AppTheme
+                                                  .colors
+                                                  .border
+                                                  .withValues(alpha: 0.4),
+
+                                              color: isOverBudget
+                                                  ? AppTheme.colors.danger
+                                                  : situation.percentage > 50
+                                                  ? AppTheme.colors.danger
+                                                  : AppTheme.colors.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                  ...group.expenses.map(
+                                    (expense) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+
+                                      child: ExpenseCard(
+                                        expense: expense,
+
+                                        onDelete: () async {
+                                          await _deleteExpense(expense);
+                                        },
+
+                                        onEdit: () async {
+                                          await _showEditModal(
+                                            context,
+                                            expense,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 6,
+                                      right: 4,
+                                    ),
+
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+
+                                      children: [
+                                        Text(
+                                          "Total : ",
+
+                                          style: TextStyle(
+                                            color: AppTheme.colors.textMuted,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+
+                                        Text(
+                                          "${group.total.toStringAsFixed(0)} Ar",
+
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: AppTheme.colors.text,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+
+                      // CHARGEMENT DES PAGES SUIVANTES
+                      if (_isLoadingMore)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+
+                          child: CircularProgressIndicator(
+                            color: AppTheme.colors.primary,
+                          ),
+                        ),
+
+                      // TOUTES LES DÉPENSES ONT ÉTÉ CHARGÉES
+                      if (!_hasMore && _expenses.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+
+                          child: Text(
+                            "Toutes les dépenses ont été chargées",
+
+                            style: TextStyle(
+                              color: AppTheme.colors.textMuted,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

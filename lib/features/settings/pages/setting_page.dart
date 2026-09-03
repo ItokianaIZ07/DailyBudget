@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/features/settings/pages/about_page.dart';
+import 'package:gestion_depenses/features/settings/pages/daily_budget_page.dart';
+import 'package:gestion_depenses/features/settings/pages/salary_page.dart';
+import 'package:gestion_depenses/features/settings/widgets/option_menu.dart';
 import 'package:gestion_depenses/services/expense_service.dart';
 import 'category_list_page.dart';
-import 'package:gestion_depenses/features/settings/widgets/option_menu.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -16,17 +18,15 @@ class SettingPage extends StatelessWidget {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.check, color: AppTheme.colors.success),
+              Icon(Icons.check_circle_outline, color: AppTheme.colors.success),
               const SizedBox(width: 8),
-              const Text('Success'),
+              const Text('Succès'),
             ],
           ),
           content: Text(message),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('OK'),
             ),
           ],
@@ -46,16 +46,15 @@ class SettingPage extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
+              onPressed: () => Navigator.pop(context, false),
               child: const Text("Annuler"),
             ),
-
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.colors.danger,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(context, true),
               child: const Text("Supprimer"),
             ),
           ],
@@ -63,10 +62,26 @@ class SettingPage extends StatelessWidget {
       },
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && context.mounted) {
       await ExpenseService.deleteAllExpenses();
-      _showSuccessDialog(context, "Toutes les dépenses ont été supprimé");
+      if (context.mounted) {
+        _showSuccessDialog(context, "Toutes les dépenses ont été supprimées.");
+      }
     }
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: AppTheme.colors.textMuted.withValues(alpha: 0.75),
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+      ),
+    );
   }
 
   Widget _buildPreferenceMenuList(BuildContext context) {
@@ -74,15 +89,27 @@ class SettingPage extends StatelessWidget {
       children: [
         OptionMenu(
           context: context,
-          icon: Icon(Icons.category_outlined),
+          icon: const Icon(Icons.category_outlined),
           title: "Catégories",
-          screen: CategoriesPage(),
+          screen: const CategoriesPage(),
         ),
         OptionMenu(
           context: context,
-          icon: Icon(Icons.info_outline),
-          title: "${"à".toUpperCase()} propos",
-          screen: AboutPage(),
+          icon: const Icon(Icons.payments_outlined),
+          title: "Salaire",
+          screen: const SalaryPage(),
+        ),
+        OptionMenu(
+          context: context,
+          icon: const Icon(Icons.monetization_on_outlined),
+          title: "Budget",
+          screen: const DailyBudgetPage(),
+        ),
+        OptionMenu(
+          context: context,
+          icon: const Icon(Icons.info_outline),
+          title: "À propos",
+          screen: const AboutPage(),
         ),
       ],
     );
@@ -91,24 +118,15 @@ class SettingPage extends StatelessWidget {
   Widget _buildDataMenuList(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: 8),
         _buildSettingButton(
           label: "Supprimer toutes les dépenses",
           icon: Icon(
             Icons.delete_outline_outlined,
             color: AppTheme.colors.danger,
           ),
-          color: AppTheme.colors.danger.withValues(alpha: 0.75),
-          onPush: () async{
-            await _confirmDelete(context);
-          },
+          color: AppTheme.colors.danger.withValues(alpha: 0.85),
+          onPush: () async => await _confirmDelete(context),
         ),
-        // SizedBox(height: 10),
-        // _buildSettingButton(
-        //   label: "Restaurer les configuration par défaut",
-        //   icon: Icon(Icons.refresh_sharp),
-        //   onPush: (){}
-        // ),
       ],
     );
   }
@@ -159,38 +177,34 @@ class SettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Paramètre")),
-      body: Padding(
-        padding: EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Préference",
-              style: TextStyle(
-                color: AppTheme.colors.textMuted.withValues(alpha: 0.75),
-              ),
-            ),
-            _buildPreferenceMenuList(context),
-            SizedBox(height: 16),
-            Text(
-              "Données",
-              style: TextStyle(
-                color: AppTheme.colors.textMuted.withValues(alpha: 0.75),
-              ),
-            ),
-            _buildDataMenuList(context),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text("Paramètres"),
       ),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            "\u00A9${DatetimeUtil.getNowYear()} - SpendWise by ItokianaIZ07. Compte bien, dépense peu",
-            style: TextStyle(color: AppTheme.colors.textMuted, fontSize: 10),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle("Préférences"),
+              _buildPreferenceMenuList(context),
+              const SizedBox(height: 16),
+              _buildSectionTitle("Données"),
+              _buildDataMenuList(context),
+              const SizedBox(height: 40),
+              Center(
+                child: Text(
+                  "\u00A9 ${DatetimeUtil.getNowYear()} - SpendWise by ItokianaIZ07. Compte bien, dépense peu",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppTheme.colors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

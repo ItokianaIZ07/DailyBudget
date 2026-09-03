@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
+import 'package:gestion_depenses/core/utils/currency_util.dart';
+import 'package:gestion_depenses/models/monthly_budget_situation.dart';
 
 class HomePageHeader extends StatelessWidget {
   final String title;
   final String date;
+  final MonthlyBudgetSituation? montlySituation;
+  final _formatAr = CurrencyUtil.getFormater();
 
-  const HomePageHeader({
+  HomePageHeader({
     required this.title,
     required this.date,
+    this.montlySituation,
     super.key,
   });
 
@@ -81,6 +86,29 @@ class HomePageHeader extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 18,),
+          if(montlySituation != null)
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Reste du mois",
+                  style: TextStyle(
+                    color: AppTheme.colors.primarySoft,
+                    fontSize: 16
+                  ),
+                ),
+                Text(
+                  _formatAr.format(montlySituation?.remaining),
+                  style: TextStyle(
+                    color: AppTheme.colors.background,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold
+                  ),
+                )
+              ],
+            )
         ],
       ),
     );

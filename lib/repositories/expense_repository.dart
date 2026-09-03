@@ -1,38 +1,82 @@
+import 'package:gestion_depenses/core/utils/datetime_util.dart';
 import 'package:gestion_depenses/models/category_limit.dart';
 import 'package:gestion_depenses/models/category_with_limit.dart';
 import 'package:gestion_depenses/models/expense_category.dart';
 import 'package:gestion_depenses/models/month.dart';
 import 'package:sqflite/sqflite.dart';
+
 import 'package:gestion_depenses/core/database/database_service.dart';
 import 'package:gestion_depenses/core/database/tables/expense_table.dart';
+
 import 'package:gestion_depenses/models/category.dart';
 import 'package:gestion_depenses/models/expense.dart';
+
 import 'category_repository.dart';
 
 class ExpenseRepository {
   static final String _tableName = ExpenseTable.tableName;
+
   static Database get _database => DatabaseService.instance.connexion!;
 
   static Future<int> createExpense(Expense expense) {
     return _database.insert(_tableName, expense.toMap());
   }
 
-  static Future<List<Expense>> getAllExpenses() async {
-    final List<Map<String, dynamic>> results = await _database.query(
-      _tableName,
-      orderBy: "date DESC",
+  static Future<List<Expense>> getAllExpenses({
+    required int limit,
+    required int offset,
+    int? month,
+  }) async {
+    String sql = """
+      SELECT
+        c.id AS category_id,
+        c.name,
+        c.color,
+        e.id,
+        e.description,
+        e.date,
+        e.amount
+
+      FROM expenses e
+
+      JOIN category c
+        ON c.id = e.category_id
+    """;
+
+    final List<dynamic> arguments = [];
+
+    // FILTRE MOIS
+    if (month != null) {
+      sql += """
+        WHERE strftime('%m', e.date) = ?
+      """;
+
+      arguments.add(month.toString().padLeft(2, '0'));
+    }
+
+    sql += """
+      ORDER BY e.date DESC
+      LIMIT ? OFFSET ?
+    """;
+
+    arguments.add(limit);
+    arguments.add(offset);
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
     );
 
     List<Expense> expenses = [];
 
     for (var map in results) {
-      Category? category = await CategoryRepository.getCategoryById(
-        map['category_id'],
+      final Category category = Category(
+        id: map['category_id'],
+        name: map['name'],
+        color: map['color'],
       );
 
-      if (category != null) {
-        expenses.add(Expense.fromMap(map, category: category));
-      }
+      expenses.add(Expense.fromMap(map, category: category));
     }
 
     return expenses;
@@ -79,42 +123,105 @@ class ExpenseRepository {
     );
   }
 
-  static Future<List<Expense>> getExpensesByCategory(Category category) async {
+  static Future<List<Expense>> getExpensesByCategory(
+    Category category, {
+    required int limit,
+    required int offset,
+    String? month,
+  }) async {
     // final debugQuery = await _database.rawQuery("SELECT date, strftime('%Y', date) AS annee_extraite FROM expenses");
     // debugprint("DEBUG DATES EN BDD : $debugQuery");
+
+    String? where = "category_id = ?";
+    List<dynamic> whereArgs = [category.id];
+
+    if (month != null) {
+      where += " AND strftime('%m', date) = ?";
+      whereArgs.add(month.padLeft(2, '0'));
+    }
+
     final List<Map<String, dynamic>> results = await _database.query(
       _tableName,
-      where: "category_id = ?",
-      whereArgs: [category.id],
+      where: where,
+      whereArgs: whereArgs,
       orderBy: "date DESC",
+      limit: limit,
+      offset: offset,
     );
 
     return results
         .map((map) => Expense.fromMap(map, category: category))
         .toList();
   }
+
 
   static Future<List<Expense>> getExpensesByCategoryAndYear(
     Category category,
-    int year,
-  ) async {
+    int year, {
+    required int limit,
+    required int offset,
+    int? month,
+  }) async {
     // final debugQuery = await _database.rawQuery("SELECT date, strftime('%Y', date) AS annee_extraite FROM expenses");
     // debugprint("DEBUG DATES EN BDD : $debugQuery");
-    final List<Map<String, dynamic>> results = await _database.query(
-      _tableName,
-      where: "category_id = ? AND strftime('%Y', date) = ?",
-      whereArgs: [category.id, year.toString()],
-      orderBy: 'date DESC',
+
+    String sql = """
+      SELECT
+        c.id AS category_id,
+        c.name,
+        c.color,
+        e.id,
+        e.description,
+        e.date,
+        e.amount
+
+      FROM expenses e
+
+      JOIN category c
+        ON c.id = e.category_id
+
+      WHERE e.category_id = ?
+        AND strftime('%Y', e.date) = ?
+    """;
+
+    final List<dynamic> arguments = [category.id, year.toString()];
+
+    // FILTRE MOIS
+    if (month != null) {
+      sql += """
+        AND strftime('%m', e.date) = ?
+      """;
+
+      arguments.add(month.toString().padLeft(2, '0'));
+    }
+
+    sql += """
+      ORDER BY e.date DESC
+      LIMIT ? OFFSET ?
+    """;
+
+    arguments.add(limit);
+    arguments.add(offset);
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
     );
 
     return results
         .map((map) => Expense.fromMap(map, category: category))
         .toList();
   }
+
+  // ─────────────────────────────────────────────
+  // RECHERCHE PAR MOT-CLÉ
+  // ─────────────────────────────────────────────
 
   static Future<List<Expense>> getByKeyword(
     String keyword, {
     int? month,
+    required int limit,
+    required int offset,
   }) async {
     String sql = """
       SELECT
@@ -136,6 +243,7 @@ class ExpenseRepository {
 
     final List<dynamic> arguments = ["%$keyword%"];
 
+    // FILTRE MOIS
     if (month != null) {
       sql += """
         AND strftime('%m', e.date) = ?
@@ -146,7 +254,11 @@ class ExpenseRepository {
 
     sql += """
       ORDER BY e.date DESC
+      LIMIT ? OFFSET ?
     """;
+
+    arguments.add(limit);
+    arguments.add(offset);
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(
       sql,
@@ -170,10 +282,13 @@ class ExpenseRepository {
     }).toList();
   }
 
+
   static Future<List<Expense>> getByKeywordAndYear(
     String keyword,
     int year, {
     int? month,
+    required int limit,
+    required int offset,
   }) async {
     String sql = """
       SELECT
@@ -207,7 +322,11 @@ class ExpenseRepository {
 
     sql += """
       ORDER BY e.date DESC
+      LIMIT ? OFFSET ?
     """;
+
+    arguments.add(limit);
+    arguments.add(offset);
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(
       sql,
@@ -231,17 +350,55 @@ class ExpenseRepository {
     }).toList();
   }
 
-  static Future<List<Expense>> getByYear(int year) async {
+
+  static Future<List<Expense>> getByYear({
+    required int year,
+    required int limit,
+    required int offset,
+    int? month,
+  }) async {
     String sql = """
-      SELECT c.id as category_id, c.name, c.color, e.id, e.description, e.date, e.amount 
-      FROM expenses e 
-      JOIN category c ON c.id = e.category_id 
-      WHERE strftime('%Y', e.date) = ? 
-      ORDER BY e.date DESC
+      SELECT
+        c.id as category_id,
+        c.name,
+        c.color,
+        e.id,
+        e.description,
+        e.date,
+        e.amount
+
+      FROM expenses e
+
+      JOIN category c
+        ON c.id = e.category_id
+
+      WHERE strftime('%Y', e.date) = ?
     """;
-    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
-      year.toString(),
-    ]);
+
+    final List<dynamic> arguments = [year.toString()];
+
+    // FILTRE MOIS
+    if (month != null) {
+      sql += """
+        AND strftime('%m', e.date) = ?
+      """;
+
+      arguments.add(month.toString().padLeft(2, '0'));
+    }
+
+    sql += """
+      ORDER BY e.date DESC
+      LIMIT ? OFFSET ?
+    """;
+
+    arguments.add(limit);
+    arguments.add(offset);
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
+    );
+
     return results.map((element) {
       Category category = Category(
         id: element["category_id"],
@@ -252,7 +409,7 @@ class ExpenseRepository {
       Expense expense = Expense(
         id: element["id"],
         description: element["description"],
-        amount: element["amount"],
+        amount: (element["amount"] as num).toDouble(),
         category: category,
         date: DateTime.parse(element["date"]),
       );
@@ -264,7 +421,9 @@ class ExpenseRepository {
   static Future<List<int>> getListYear() async {
     String sql =
         "SELECT DISTINCT strftime('%Y', date) as annee FROM $_tableName ORDER BY annee DESC";
+
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql);
+
     return results.map((element) {
       return int.parse(element["annee"]);
     }).toList();
@@ -273,10 +432,12 @@ class ExpenseRepository {
   static Future<double> getExpenseOfTheWeek(String week, String year) async {
     String sql =
         """
-      SELECT COALESCE(SUM(amount), 0.0) as total 
-      FROM $_tableName e 
-      WHERE strftime('%W', e.date) = ? AND strftime('%Y', e.date) = ?
+      SELECT COALESCE(SUM(amount), 0.0) as total
+      FROM $_tableName e
+      WHERE strftime('%W', e.date) = ?
+        AND strftime('%Y', e.date) = ?
     """;
+
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       week,
       year,
@@ -287,16 +448,18 @@ class ExpenseRepository {
     if (results.isNotEmpty && results.first["total"] != null) {
       return (results.first["total"] as num).toDouble();
     }
+
     return 0.0;
   }
 
   static Future<double> getExpenseOfTheMonth(String month, String year) async {
     String sql =
         """
-          SELECT COALESCE(SUM(amount), 0.0) as total 
-          FROM $_tableName e 
-          WHERE strftime('%m', e.date) = ? AND strftime('%Y', e.date) = ?
-        """;
+      SELECT COALESCE(SUM(amount), 0.0) as total
+      FROM $_tableName e
+      WHERE strftime('%m', e.date) = ?
+        AND strftime('%Y', e.date) = ?
+    """;
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       month,
@@ -306,16 +469,17 @@ class ExpenseRepository {
     if (results.isNotEmpty && results.first["total"] != null) {
       return (results.first["total"] as num).toDouble();
     }
+
     return 0.0;
   }
 
   static Future<double> getExpenseOfTheYear(String year) async {
     String sql =
         """
-          SELECT COALESCE(SUM(amount), 0.0) as total 
-          FROM $_tableName e 
-          WHERE strftime('%Y', e.date) = ?
-        """;
+      SELECT COALESCE(SUM(amount), 0.0) as total
+      FROM $_tableName e
+      WHERE strftime('%Y', e.date) = ?
+    """;
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       year,
@@ -324,6 +488,7 @@ class ExpenseRepository {
     if (results.isNotEmpty && results.first["total"] != null) {
       return (results.first["total"] as num).toDouble();
     }
+
     return 0.0;
   }
 
@@ -337,21 +502,22 @@ class ExpenseRepository {
     // COALESCE(...) pour remplacer NULL par 0.0
     String sql =
         """
-          SELECT 
-            c.id, 
-            c.name, 
-            c.color, 
-            COALESCE(l.amount, 0.0) as limit_amount, 
-            COALESCE(SUM(e.amount), 0.0) as total 
-          FROM category c 
-          LEFT JOIN $_tableName e ON c.id = e.category_id 
-          LEFT JOIN category_limit l ON l.category_id = c.id 
-          $condition
-          GROUP BY c.id, c.name, c.color, l.amount 
-          ORDER BY total DESC
-        """;
+      SELECT
+        c.id,
+        c.name,
+        c.color,
+        COALESCE(l.amount, 0.0) as limit_amount,
+        COALESCE(SUM(e.amount), 0.0) as total
+      FROM category c
+      LEFT JOIN $_tableName e ON c.id = e.category_id
+      LEFT JOIN category_limit l ON l.category_id = c.id
+      $condition
+      GROUP BY c.id, c.name, c.color, l.amount
+      ORDER BY total DESC
+    """;
 
     List<String> arguments = [];
+
     if (option == 0) {
       arguments = [week, year];
     } else if (option == 1) {
@@ -373,6 +539,7 @@ class ExpenseRepository {
       );
 
       double limitAmount = (element["limit_amount"] as num?)?.toDouble() ?? 0.0;
+
       double totalExpense = (element["total"] as num?)?.toDouble() ?? 0.0;
 
       CategoryLimit limit = CategoryLimit(
@@ -395,11 +562,12 @@ class ExpenseRepository {
   ) async {
     String sql =
         """
-      SELECT 
+      SELECT
         strftime('%w', date) as day_index,
         COALESCE(SUM(amount), 0.0) as total
       FROM $_tableName
-      WHERE strftime('%W', date) = ? AND strftime('%Y', date) = ?
+      WHERE strftime('%W', date) = ?
+        AND strftime('%Y', date) = ?
       GROUP BY day_index
     """;
 
@@ -421,6 +589,7 @@ class ExpenseRepository {
     for (var data in results) {
       int dayIndex = int.parse(data["day_index"]);
       double total = (data["total"] as num).toDouble();
+
       if (dayIndex == 0) {
         weeklyData[7] = total;
       } else {
@@ -437,6 +606,7 @@ class ExpenseRepository {
   ) async {
     int monthInt = int.parse(month);
     int yearInt = int.parse(year);
+
     int daysInMonth = DateTime(yearInt, monthInt + 1, 0).day;
 
     Map<int, double> monthlyData = {
@@ -446,13 +616,14 @@ class ExpenseRepository {
     // groupe par jour du mois ('%d')
     String sql =
         """
-        SELECT 
-          strftime('%d', date) as day_of_month,
-          COALESCE(SUM(amount), 0.0) as total
-        FROM $_tableName
-        WHERE strftime('%m', date) = ? AND strftime('%Y', date) = ?
-        GROUP BY day_of_month
-      """;
+      SELECT
+        strftime('%d', date) as day_of_month,
+        COALESCE(SUM(amount), 0.0) as total
+      FROM $_tableName
+      WHERE strftime('%m', date) = ?
+        AND strftime('%Y', date) = ?
+      GROUP BY day_of_month
+    """;
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       month,
@@ -462,6 +633,7 @@ class ExpenseRepository {
     for (var data in results) {
       int day = int.parse(data["day_of_month"]);
       double total = (data["total"] as num).toDouble();
+
       monthlyData[day] = total;
     }
 
@@ -475,13 +647,13 @@ class ExpenseRepository {
 
     String sql =
         """
-        SELECT 
-          strftime('%m', date) as month_index,
-          COALESCE(SUM(amount), 0.0) as total
-        FROM $_tableName
-        WHERE strftime('%Y', date) = ?
-        GROUP BY month_index
-      """;
+      SELECT
+        strftime('%m', date) as month_index,
+        COALESCE(SUM(amount), 0.0) as total
+      FROM $_tableName
+      WHERE strftime('%Y', date) = ?
+      GROUP BY month_index
+    """;
 
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       year,
@@ -490,6 +662,7 @@ class ExpenseRepository {
     for (var data in results) {
       int monthIndex = int.parse(data["month_index"]);
       double total = (data["total"] as num).toDouble();
+
       yearlyData[monthIndex] = total;
     }
 
@@ -503,26 +676,27 @@ class ExpenseRepository {
   static Future<List<Month>> getListMonths(String year) async {
     String sql =
         """
-    SELECT DISTINCT
+      SELECT DISTINCT
         strftime('%m', date) AS numero_mois,
         CASE strftime('%m', date)
-            WHEN '01' THEN 'Janvier'
-            WHEN '02' THEN 'Février'
-            WHEN '03' THEN 'Mars'
-            WHEN '04' THEN 'Avril'
-            WHEN '05' THEN 'Mai'
-            WHEN '06' THEN 'Juin'
-            WHEN '07' THEN 'Juillet'
-            WHEN '08' THEN 'Août'
-            WHEN '09' THEN 'Septembre'
-            WHEN '10' THEN 'Octobre'
-            WHEN '11' THEN 'Novembre'
-            WHEN '12' THEN 'Décembre'
+          WHEN '01' THEN 'Janvier'
+          WHEN '02' THEN 'Février'
+          WHEN '03' THEN 'Mars'
+          WHEN '04' THEN 'Avril'
+          WHEN '05' THEN 'Mai'
+          WHEN '06' THEN 'Juin'
+          WHEN '07' THEN 'Juillet'
+          WHEN '08' THEN 'Août'
+          WHEN '09' THEN 'Septembre'
+          WHEN '10' THEN 'Octobre'
+          WHEN '11' THEN 'Novembre'
+          WHEN '12' THEN 'Décembre'
         END AS mois
-    FROM $_tableName
-    WHERE strftime('%Y', date) = ?
-    ORDER BY numero_mois ASC
+      FROM $_tableName
+      WHERE strftime('%Y', date) = ?
+      ORDER BY numero_mois ASC
     """;
+
     final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
       year,
     ]);
@@ -532,6 +706,7 @@ class ExpenseRepository {
       //   "label": item["mois"].toString(),
       //   "value": item["numero_mois"].toString()
       // );
+
       return Month(
         label: item["mois"].toString(),
         value: item["numero_mois"].toString(),
@@ -546,16 +721,91 @@ class ExpenseRepository {
   ) async {
     final List<Map<String, dynamic>> results = await _database.query(
       _tableName,
-      where: "strftime('%m', date) = ? AND strftime('%m', date)",
+      where: "strftime('%m', date) = ? AND strftime('%Y', date) = ?",
       whereArgs: [month, year],
       orderBy: "date DESC",
     );
+
     if (results.isEmpty) {
       return null;
     }
+
     return results.map((expense) {
       return Expense.fromMap(expense, category: category);
     }).toList();
+  }
+
+  static Future<double> getExpenseByDate(DateTime date) async {
+    String dateString = date.toDateString();
+
+    String sql =
+        "SELECT COALESCE(SUM(amount),0) as total FROM $_tableName WHERE strftime('%Y-%m-%d' ,date) = ?";
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(sql, [
+      dateString,
+    ]);
+
+    double total = 0;
+
+    for (var element in results) {
+      total += (element["total"] as num).toDouble();
+    }
+
+    return total;
+  }
+
+  static Future<List<Expense>> getExpenseByLimit(int limit) async {
+    final List<Map<String, dynamic>> results = await _database.query(
+      _tableName,
+      orderBy: "date DESC",
+      limit: limit,
+    );
+
+    List<Expense> expenses = [];
+
+    for (var map in results) {
+      Category? category = await CategoryRepository.getCategoryById(
+        map['category_id'],
+      );
+
+      if (category != null) {
+        expenses.add(Expense.fromMap(map, category: category));
+      }
+    }
+
+    return expenses;
+  }
+
+  static Future<List<DateTime>> getAllExpenseDates() async {
+    String sql = "SELECT DISTINCT date FROM $_tableName";
+
+    List<Map<String, dynamic>> results = await _database.rawQuery(sql);
+
+    return results.map((item) {
+      return DateTime.parse(item["date"] as String);
+    }).toList();
+  }
+
+  static Future<List<Expense>> getListExpenseByDate(DateTime date) async {
+    final List<Map<String, dynamic>> results = await _database.query(
+      _tableName,
+      where: "strftime('%Y-%m-%d', date) = ?",
+      whereArgs: [date.toDateString()],
+    );
+
+    List<Expense> expenses = [];
+
+    for (var map in results) {
+      Category? category = await CategoryRepository.getCategoryById(
+        map['category_id'],
+      );
+
+      if (category != null) {
+        expenses.add(Expense.fromMap(map, category: category));
+      }
+    }
+
+    return expenses;
   }
 
   //   static Future<void> testDebugDates() async {
@@ -569,8 +819,6 @@ class ExpenseRepository {
   //     FROM $_tableName
   //     LIMIT 10
   //   """;
-
-  //   final List<Map<String, dynamic>> results = await _database.rawQuery(sql);
 
   //   debugPrint("--- TEST DEBUG DATES ---");
   //   for (var row in results) {

@@ -23,6 +23,10 @@ extension DateTimeExtension on DateTime {
     final differenceInDays = difference(firstMonday).inDays;
     return (differenceInDays / 7).floor() + 1;
   }
+
+  String toDateString(){
+    return '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+  }
 }
 
 class DatetimeUtil {

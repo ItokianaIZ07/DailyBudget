@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:gestion_depenses/core/themes/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
@@ -10,10 +9,7 @@ class AboutPage extends StatelessWidget {
     final Uri url = Uri.parse('https://github.com/ItokianaIZ07');
 
     if (await canLaunchUrl(url)) {
-      await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
-      );
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -64,7 +60,7 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 6),
 
           Text(
-            'Version v1',
+            'Version v1.1',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -75,9 +71,10 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 10),
 
           Text(
-            'Une application simple et pratique pour suivre vos dépenses, '
-            'gérer vos catégories et leurs limites mensuelles et garder '
-            'un meilleur contrôle de votre budget au quotidien.',
+            "Une application simple et pratique pour gérer votre salaire, "
+            "suivre vos dépenses, définir votre budget quotidien, gérer vos "
+            "catégories et leurs limites mensuelles, et garder un meilleur "
+            "contrôle de vos finances au quotidien.",
             style: TextStyle(
               fontSize: 14,
               height: 1.55,
@@ -116,10 +113,7 @@ class AboutPage extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTheme.colors.primary,
-                width: 2,
-              ),
+              border: Border.all(color: AppTheme.colors.primary, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: AppTheme.colors.shadow.withValues(alpha: 0.15),
@@ -129,10 +123,7 @@ class AboutPage extends StatelessWidget {
               ],
             ),
             child: ClipOval(
-              child: Image.asset(
-                'assets/images/dev.jpg',
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset('assets/images/dev.jpg', fit: BoxFit.cover),
             ),
           ),
 
@@ -151,41 +142,24 @@ class AboutPage extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          _buildInfoRow(
-            'GitHub',
-            'ItokianaIZ07',
-            isLink: true,
-          ),
+          _buildInfoRow('GitHub', 'ItokianaIZ07', isLink: true),
 
-          _buildInfoRow(
-            'Nom',
-            'RABARIVELONJATOVO ZELIARILALA',
-          ),
+          _buildInfoRow('Nom', 'RABARIVELONJATOVO ZELIARILALA'),
 
-          _buildInfoRow(
-            'Prénom',
-            'Itokiana',
-          ),
+          _buildInfoRow('Prénom', 'Itokiana'),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    String label,
-    String value, {
-    bool isLink = false,
-  }) {
+  Widget _buildInfoRow(String label, String value, {bool isLink = false}) {
     return InkWell(
       onTap: isLink ? _openGithub : null,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              color: AppTheme.colors.border,
-              width: 1,
-            ),
+            bottom: BorderSide(color: AppTheme.colors.border, width: 1),
           ),
         ),
         child: Row(
@@ -271,18 +245,13 @@ class AboutPage extends StatelessWidget {
           foregroundColor: AppTheme.colors.surface,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppTheme.radius.md,
-            ),
+            borderRadius: BorderRadius.circular(AppTheme.radius.md),
           ),
           elevation: 2,
         ),
         child: const Text(
           'Retour',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -291,9 +260,7 @@ class AboutPage extends StatelessWidget {
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: AppTheme.colors.surface,
-      borderRadius: BorderRadius.circular(
-        AppTheme.radius.lg,
-      ),
+      borderRadius: BorderRadius.circular(AppTheme.radius.lg),
       boxShadow: [
         BoxShadow(
           color: AppTheme.colors.shadow.withValues(alpha: 0.08),

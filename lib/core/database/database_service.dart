@@ -1,3 +1,6 @@
+import 'package:gestion_depenses/core/database/migrations/database_migration.dart';
+import 'package:gestion_depenses/core/database/tables/daily_budget_table.dart';
+import 'package:gestion_depenses/core/database/tables/monthly_salary_table.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'database_constants.dart';
@@ -36,8 +39,10 @@ class DatabaseService {
         await _createTables(db);
         await _insertDefaultData(db);
       },
-      onUpgrade: (db, oldVersion, newVersion) => {
-
+      onUpgrade: (db, oldVersion, newVersion) async{
+        if (oldVersion < 2) {
+          await DatabaseMigration.upgradeToVersion2(db);
+        }
       },
     );
     return connexion!;
@@ -48,6 +53,8 @@ class DatabaseService {
     await ExpenseTable.createTable(database);
     await LimitTable.createTable(database);
     await AppmetadataTable.createTable(database);
+    await MonthlySalaryTable.createTable(database);
+    await DailyBudgetTable.createTable(database);
   }
 
   Future<void> _insertDefaultData(Database database) async {
