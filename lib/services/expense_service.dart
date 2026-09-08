@@ -421,4 +421,11 @@ class ExpenseService {
 
     return groups;
   }
+
+  static Future<double> calculateTotalExpense({
+    Category? category,
+    required int year,
+    String? month}) async{
+    return await ExpenseRepository.getTotalExpenses(category: category, year: year, month: month);
+  }
 }

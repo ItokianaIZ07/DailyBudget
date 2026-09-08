@@ -75,6 +75,8 @@ class _HistoryPageState extends State<HistoryPage> {
         offset: _offset,
       );
 
+      await _calculateTotalExpense();
+
       if (!mounted) return;
 
       setState(() {
@@ -85,8 +87,6 @@ class _HistoryPageState extends State<HistoryPage> {
         if (expenses.length < _pageSize) {
           _hasMore = false;
         }
-
-        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
 
       final groups = await ExpenseService.groupExpensesByDate(_expenses);
@@ -149,6 +149,8 @@ class _HistoryPageState extends State<HistoryPage> {
         offset: _offset,
       );
 
+      await _calculateTotalExpense();
+
       if (!mounted) return;
 
       final groups = await ExpenseService.groupExpensesByDate(expenses);
@@ -167,8 +169,6 @@ class _HistoryPageState extends State<HistoryPage> {
         if (expenses.length < _pageSize) {
           _hasMore = false;
         }
-
-        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
     } catch (e) {
       debugPrint('Une erreur est survenue lors de la recherche : $e');
@@ -192,12 +192,12 @@ class _HistoryPageState extends State<HistoryPage> {
 
       final groups = await ExpenseService.groupExpensesByDate(_expenses);
 
+      await _calculateTotalExpense();
+
       setState(() {
         _expenseGroups
           ..clear()
           ..addAll(groups);
-
-        _totalExpense = ExpenseService.sumExpenseAmount(_expenses);
       });
     } catch (e) {
       debugPrint('Erreur suppression dépense : $e');
@@ -251,6 +251,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _refreshScreen() async {
     await _loadMonths();
     await _loadExpenses();
+    await _calculateTotalExpense();
   }
 
   Future<void> _showEditModal(BuildContext context, Expense expense) async {
@@ -265,6 +266,19 @@ class _HistoryPageState extends State<HistoryPage> {
     if (modified == true) {
       await _loadExpenses();
     }
+  }
+
+  Future<void> _calculateTotalExpense() async{
+    try{
+      final total = await ExpenseService.calculateTotalExpense(year: widget.selectedYear, category: _selectedCategory, month: _selectedMonth?.value);
+      
+      setState(() {
+        _totalExpense = total;
+      });
+    }catch(e){
+      debugPrint("Une erreur est survenue lors du calcul des totals des dépenses: $e");
+    }
+
   }
 
   @override
@@ -410,7 +424,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
                   child: Column(
                     children: [
-                      TotalWidget(
+                      TotalWidget(  
                         totalExpense: _totalExpense,
                         selectedMonth: _selectedMonth,
                         selectedYear: widget.selectedYear,
