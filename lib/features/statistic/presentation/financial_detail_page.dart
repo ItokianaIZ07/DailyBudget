@@ -105,11 +105,15 @@ class _FinancialDetailPageState extends State<FinancialDetailPage> {
           ),
           _buildMetricCard(
             icon: Icons.savings_outlined,
-            iconBackground: AppTheme.colors.secondarySoft,
-            iconColor: AppTheme.colors.secondary,
-            title: 'Budget disponible',
+            iconBackground: situation.availableBudget > 0
+                ? AppTheme.colors.secondarySoft
+                : AppTheme.colors.dangerSoft,
+            iconColor: situation.availableBudget > 0
+                ? AppTheme.colors.secondary
+                : AppTheme.colors.danger,
+            title: 'Budget réel disponible',
             value: _currency.format(situation.availableBudget),
-            valueColor: AppTheme.colors.secondary,
+            valueColor: situation.availableBudget >= 0 ? AppTheme.colors.secondary: AppTheme.colors.danger,
           ),
           _buildMetricCard(
             icon: Icons.shopping_cart_outlined,
@@ -178,10 +182,14 @@ class _FinancialDetailPageState extends State<FinancialDetailPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            _currency.format(situation.remaining),
-            style: const TextStyle(
-              color: Color(0xFF72E5DB),
-              fontSize: 32,
+            situation.remaining > 0
+                ? _currency.format(situation.remaining)
+                : "Vous avez dépensé tout votre salaire !",
+            style: TextStyle(
+              color: situation.remaining > 0
+                  ? Color(0xFF72E5DB)
+                  : AppTheme.colors.dangerSoft,
+              fontSize: situation.remaining > 0 ? 32 : 16,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -272,8 +280,18 @@ class _FinancialDetailPageState extends State<FinancialDetailPage> {
 
   String _monthLabel(int month) {
     const months = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
     ];
     return months[month - 1];
   }

@@ -154,7 +154,6 @@ class ExpenseRepository {
         .toList();
   }
 
-
   static Future<List<Expense>> getExpensesByCategoryAndYear(
     Category category,
     int year, {
@@ -282,7 +281,6 @@ class ExpenseRepository {
     }).toList();
   }
 
-
   static Future<List<Expense>> getByKeywordAndYear(
     String keyword,
     int year, {
@@ -349,7 +347,6 @@ class ExpenseRepository {
       );
     }).toList();
   }
-
 
   static Future<List<Expense>> getByYear({
     required int year,
@@ -806,6 +803,51 @@ class ExpenseRepository {
     }
 
     return expenses;
+  }
+
+  static Future<double> getTotalExpenses({
+    Category? category,
+    required int year,
+    String? month,
+  }) async {
+    String sql = """
+      SELECT COALESCE(SUM(e.amount), 0) AS total
+      FROM expenses e
+      WHERE 1 = 1
+    """;
+
+    final List<dynamic> arguments = [];
+
+    if (year > 0) {
+      sql += """
+      AND strftime('%Y', e.date) = ?
+    """;
+
+      arguments.add(year.toString());
+    }
+
+    if (category != null) {
+      sql += """
+      AND e.category_id = ?
+    """;
+
+      arguments.add(category.id);
+    }
+
+    if (month != null) {
+      sql += """
+      AND strftime('%m', e.date) = ?
+    """;
+
+      arguments.add(month.padLeft(2, '0'));
+    }
+
+    final List<Map<String, dynamic>> results = await _database.rawQuery(
+      sql,
+      arguments,
+    );
+
+    return (results.first['total'] as num).toDouble();
   }
 
   //   static Future<void> testDebugDates() async {

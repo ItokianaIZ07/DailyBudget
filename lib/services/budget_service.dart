@@ -48,19 +48,22 @@ class BudgetService {
 
     double sumBudgetPlanified =
         await DailyBudgetService.calculateSumBudgetByPeriod(month, year);
-    double realExpenseOfTHeMonth = await ExpenseService.getExpenseOfTheMonth(
+    double realExpenseOfTheMonth = await ExpenseService.getExpenseOfTheMonth(
       month,
       year,
     );
-    double availableBudget = monthlySalary.amount - sumBudgetPlanified;
-    double realRemainingMoney = monthlySalary.amount - realExpenseOfTHeMonth;
+
+    double remainingBudgetToSpend = sumBudgetPlanified - realExpenseOfTheMonth;
+
+    double realRemainingMoney = monthlySalary.amount - realExpenseOfTheMonth;
+    double availableBudget = monthlySalary.amount - sumBudgetPlanified + remainingBudgetToSpend;
 
     return MonthlyBudgetSituation(
       salary: monthlySalary.amount,
       plannedBudget: sumBudgetPlanified,
       availableBudget: availableBudget,
       remaining: realRemainingMoney,
-      spent: realExpenseOfTHeMonth,
+      spent: realExpenseOfTheMonth,
     );
   }
 }
