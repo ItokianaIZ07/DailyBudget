@@ -128,6 +128,43 @@ class _DailyBudgetPageState extends State<DailyBudgetPage> {
     );
   }
 
+  Future<void> _confirmDelete(BuildContext context) async {
+
+    if(_budget == null) return;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Supprimer le budget ?"),
+          content: const Text(
+            "Cette action est irréversible. Voulez-vous vraiment supprimer ce budget ?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text("Annuler"),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text("Supprimer"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await DailyBudgetService.deleteBudget(_budget!.id!);
+      await _refresh();
+    }
+  }
+
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
@@ -197,13 +234,20 @@ class _DailyBudgetPageState extends State<DailyBudgetPage> {
                     ),
             ),
 
-            if (_budget != null)
+            if (_budget != null) ...[
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                color: AppTheme.colors.danger,
+                tooltip: "Supprimer le budget",
+                onPressed: () => _confirmDelete(context),
+              ),
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
                 color: AppTheme.colors.primary,
                 onPressed: _showEditDialog,
                 tooltip: "Modifier le budget",
               ),
+            ],
           ],
         ),
       ),
